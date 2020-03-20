@@ -1,27 +1,32 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
+import Index from '../components/Index.vue'
+import Login from '../components/Login.vue'
+import yewujieshao from '../components/content/yewujieshao.vue'
+import dailibaobei from '../components/content/dailibaobei.vue'
+import kehubaobei from '../components/content/kehubaobei.vue'
+import zhikebaobei from '../components/content/zhikebaobei.vue'
+import zhixingbaobei from '../components/content/zhixingbaobei.vue'
 
 Vue.use(VueRouter)
 
-const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: Home
-  },
-  {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-  }
-]
-
 const router = new VueRouter({
-  routes
+  routes: [
+    { path: '/', redirect: '/login' },
+    { path: '/index',
+      component: Index,
+      name: 'index',
+      children: [
+        { path: 'yewujieshao', component: yewujieshao, name: 'yewujieshao' },
+        { path: 'dailibaobei', component: dailibaobei, name: 'dailibaobei' },
+        { path: 'kehubaobei', component: kehubaobei, name: 'kehubaobei' },
+        { path: 'zhikebaobei', component: zhikebaobei, name: 'zhikebaobei' },
+        { path: 'zhixingbaobei', component: zhixingbaobei, name: 'zhixingbaobei' }
+      ]
+    },
+    { path: '/login', component: Login }
+  ]
 })
 
+// 创建一个理由对象
 export default router
