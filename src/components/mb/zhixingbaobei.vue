@@ -1,45 +1,43 @@
 <template>
-  <div class="kehu">
+  <div class="zhixing">
     <div class="top">
-      <input class="input" v-model="searchVal" placeholder="请输入需要搜索的内容">
+      <input class="input" v-model="input" placeholder="请输入需要搜索的内容">
       <button class="btn-1">搜索</button>
-      <button class="btn-2" @click="outerVisible=true">新增客户报备</button>
+      <button class="btn-2" @click="outerVisible=true">新增执行报备</button>
     </div>
     <div class="center">
       <div class="center-1">
+        <div>报备时间</div>
         <div>客户名称</div>
         <div>联系方式</div>
-        <div>客户价格</div>
-        <div>客户来源</div>
         <div>投放城市</div>
         <div>投放网点</div>
-        <div>投放周期</div>
+        <div>投放日期</div>
         <div>投放数量</div>
-        <div>报备时间</div>
-        <!-- <div>合约金额</div>
-        <div>合同影印件</div> -->
+        <div>印刷物流证明</div>
+        <div>投放证明</div>
+        <div>执行依据</div>
       </div>
       <div class="center-2">
         <ul v-for="item in list" :key="item.id">
           <li>
+            <div>{{item.createTime}}</div>
             <div>{{item.username}}</div>
-            <div>{{item.phone}}</div>
-            <div>{{item.customPrice}}</div>
-            <div>{{item.customFrom}}</div>
+            <div>{{item.phone || '--'}}</div>
             <div>{{item.province}} {{item.city}}</div>
             <div>{{item.dot}}</div>
-            <div>{{item.dttime}}{{item.dttime1 && '-' + item.dttime1}}</div>
+            <div>{{item.dttime}}</div>
             <div>{{item.number}}</div>
-            <div>{{item.createTime}}</div>
-            <!-- <div>{{item.price}}</div>
-            <div><img :src="item.contractimg" alt=""></div> -->
+            <div><img :src="item.headpic" alt=""></div>
+            <div><img :src="item.contractimg" alt=""></div>
+            <div><img :src="item.executeimg" alt=""></div>
           </li>
         </ul>
       </div>
     </div>
     <el-dialog :visible.sync="outerVisible">
-      <div class="kehu-1">
-        <p>客户报备</p>
+      <div class="zhixing-1">
+        <p class="p1">执行报备</p>
         <el-form :model="ruleForm" :rules="rules" ref="ruleForm" class="demo-ruleForm">
           <el-form-item label="客户名称" prop="username">
             <el-input v-model="ruleForm.username" placeholder="请输入客户名称"></el-input>
@@ -47,21 +45,7 @@
           <el-form-item label="联系方式" prop="phone">
             <el-input v-model="ruleForm.phone" placeholder="请输入手机号"></el-input>
           </el-form-item>
-          <el-form-item label="客户价格" prop="customPrice">
-            <el-input v-model="ruleForm.customPrice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
-          </el-form-item>
-          <el-form-item label="客户来源" prop="customFrom" class="custom-from-item">
-            <!-- <el-input v-model="ruleForm.customFrom" placeholder="请输入客户来源"></el-input> -->
-            <el-select v-model="ruleForm.customFrom" placeholder="请选择客户来源">
-              <el-option label="三通一达" value="三通一达"></el-option>
-              <el-option label="代理公司" value="代理公司"></el-option>
-            </el-select>
-          </el-form-item>
-          <!-- <el-form-item label="投放城市" prop="city">
-            <el-input v-model="ruleForm.city" placeholder="投放城市"></el-input>
-          </el-form-item> -->
-          <!-- <div class="jfbdv">投放城市</div> -->
-          <div class="jfbdv"><span class="c-red">*</span>投放城市</div>
+          <div><span class="c-red">*</span>投放城市</div>
           <el-form-item prop="province">
             <el-select v-model="ruleForm.region" placeholder="地区  （必 填）" class="aj6" @change="handleRegionChange">
               <el-option v-for="(item, index) in regionList" :key="index" :label="item" :value="item"></el-option>
@@ -76,20 +60,91 @@
           <el-form-item label="投放网点" prop="dot">
             <el-input v-model="ruleForm.dot" placeholder="请输入投放网点"></el-input>
           </el-form-item>
-          <el-form-item label="投放周期">
+          <div>
+            <el-form-item label="投放日期" prop="dttime">
               <el-col :span="10">
-                <el-date-picker type="date" placeholder="选择开始日期" v-model="ruleForm.dttime" style="width: 80%;"></el-date-picker>
-              </el-col>
-              <el-col :span="10">
-                <el-date-picker type="date" placeholder="选择结束日期" v-model="ruleForm.dttime1" style="width: 80%;"></el-date-picker>
+                <el-date-picker type="date" placeholder="请选择投放日期" v-model="ruleForm.dttime" style="width: 85%;"></el-date-picker>
               </el-col>
             </el-form-item>
+          </div>
           <el-form-item label="投放数量" prop="number">
-            <el-input v-model="ruleForm.number" placeholder="投放数量" @input="val => ruleForm.number = val.match(/\d*/)[0]"></el-input>
+            <el-input v-model="ruleForm.number" placeholder="请输入投放数量"></el-input>
           </el-form-item>
-          <!-- <el-form-item label="投放时间" prop="cycle">
-            <el-input v-model="ruleForm.cycle" placeholder="投放时间"></el-input>
-          </el-form-item> -->
+          <div class="dhv clearfix">
+            <div class="hjdiv clearfix">印刷物流证明</div>
+          </div>
+          <div class="hbdfbvdf">
+            <el-upload
+              class="avatar-uploader"
+              :action="actions.uploadHeadPotrait + '&bindId=' + userid"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess1"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl1" :src="imageUrl1" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+          </div>
+          <div class="sdivb clearfix">投放证明</div>
+          <div class="drvdfvb clearfix">1、执行依据（图片）</div>
+          <div class="hbdfbvdf">
+            <el-upload
+              class="avatar-uploader"
+              :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess2"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl2" :src="imageUrl2" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+            <el-upload
+              class="avatar-uploader"
+              :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess7"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl7" :src="imageUrl7" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+            <el-upload
+              class="avatar-uploader"
+              :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess8"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl8" :src="imageUrl8" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+          </div>
+          <div class="drvdfvb clearfix">2、执行依据 （视频）</div>
+          <div class="hbdfbvdf">
+            <el-upload
+              class="avatar-uploader"
+              :action="actions.uploadHeadPotrait4 + '&bindId=' + userid"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess3"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl3" :src="imageUrl3" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+            <el-upload
+              class="avatar-uploader"
+              :action="actions.uploadHeadPotrait4 + '&bindId=' + userid"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess4"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl4" :src="imageUrl4" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+            <el-upload
+              class="avatar-uploader"
+              :action="actions.uploadHeadPotrait4 + '&bindId=' + userid"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess5"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl5" :src="imageUrl5" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+          </div>
           <el-form-item>
             <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
           </el-form-item>
@@ -110,8 +165,11 @@
 </template>
 
 <script>
+import actions from '../../config/ima'
 import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName, getAreaListFromCityName } from '@/components/uitl/jsAddress.js'
+
 import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
+
 export default {
   data () {
     var checkPhone = (rule, value, callback) => {
@@ -131,46 +189,47 @@ export default {
       regionList: getRegionList(),
       provinceList: null,
       cityList: null,
-      centerDialogVisible: false,
+      actions,
+      imageUrl1: '',
+      userid: '',
+      formatTime: '',
+      list: '',
       provinceMap: getProvinceMap(), // 省份
       cityMap: null, // 城市
-      searchVal: '',
-      list: '',
+      centerDialogVisible: false,
       outerVisible: false,
+      imageUrl2: '',
+      imageUrl3: '',
+      imageUrl4: '',
+      imageUrl5: '',
+      imageUrl6: '',
+      imageUrl7: '',
+      imageUrl8: '',
       ruleForm: {
         username: '',
         city: '',
-        phone: '',
-        customPrice: '', // 客户价格
-        customFrom: '', // 客户来源
+        dttime: '',
+        number: '',
+        // dttime1: '',
         province: '',
         dot: '',
-        number: '',
-        dttime: '',
-        dttime1: '',
-        cycle: ''
+        phone: ''
       },
       rules: {
         username: [
           { required: true, message: '请输入客户名称', trigger: 'blur' }
         ],
-        city: [
-          { required: true, message: '请输入投放城市', trigger: 'blur' }
-        ],
-        customPrice: [
-          { required: true, message: '请输入客户价格', trigger: 'blur' }
-        ],
-        customFrom: [
-          { required: true, message: '请输入客户来源', trigger: 'blur' }
-        ],
-        dot: [
-          { required: true, message: '请输入投放网点', trigger: 'blur' }
-        ],
         number: [
           { required: true, message: '请输入投放数量', trigger: 'blur' }
         ],
-        cycle: [
-          { required: true, message: '请输入投放时间', trigger: 'blur' }
+        dttime: [
+          { required: true, message: '请输入投放日期', trigger: 'blur' }
+        ],
+        city: [
+          { required: true, message: '请输入投放城市', trigger: 'blur' }
+        ],
+        dot: [
+          { required: true, message: '请输入投放网点', trigger: 'blur' }
         ],
         phone: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
@@ -180,27 +239,10 @@ export default {
     }
   },
   created () {
-    // this.setDialogWidth()
-  },
-  mounted () {
     this.id()
     this.getList()
-    // this.generateImgCode()
-    window.onresize = () => {
-      return (() => {
-        // this.setDialogWidth()
-      })()
-    }
   },
   methods: {
-    hanldeFormatNumberWithFocus (val) {
-      const num = val.match(/^\d+(\.?\d{0,2})/)
-      this.ruleForm.customPrice = num && num[0]
-    },
-    handleFormatNumberAfterBlur () {
-      const price = this.ruleForm.customPrice
-      this.ruleForm.customPrice = price.endsWith('.') ? price.replace('.', '') : price
-    },
     handleRegionChange (regionName) {
       console.log(regionName)
       this.ruleForm.province = ''
@@ -216,17 +258,53 @@ export default {
         url: 'temp/admin/user/list',
         // url: 'admin/user/list',
         params: {
-          userType: 2,
+          userType: 3,
           region: region,
           page: 1,
           row: 10
         }
       }).then(data => {
-        console.log('这是客户报备数据')
+        console.log('这是执行报备数据')
         console.log(data)
         this.list = data.data.data.list
         console.log(this.list)
       })
+    },
+    handleAvatarSuccess1 (res, file) {
+      this.imageUrl1 = URL.createObjectURL(file.raw)
+    },
+    handleAvatarSuccess2 (res, file) {
+      this.imageUrl2 = URL.createObjectURL(file.raw)
+    },
+    handleAvatarSuccess3 (res, file) {
+      this.imageUrl3 = URL.createObjectURL(file.raw)
+    },
+    handleAvatarSuccess4 (res, file) {
+      this.imageUrl4 = URL.createObjectURL(file.raw)
+    },
+    handleAvatarSuccess5 (res, file) {
+      this.imageUrl5 = URL.createObjectURL(file.raw)
+    },
+    handleAvatarSuccess6 (res, file) {
+      this.imageUrl6 = URL.createObjectURL(file.raw)
+    },
+    handleAvatarSuccess7 (res, file) {
+      this.imageUrl7 = URL.createObjectURL(file.raw)
+    },
+    handleAvatarSuccess8 (res, file) {
+      this.imageUrl8 = URL.createObjectURL(file.raw)
+    },
+    beforeAvatarUpload (file) {
+      const isJPG = file.type === 'image/jpeg'
+      const isLt2M = file.size / 1024 / 1024 < 2
+
+      if (!isJPG) {
+        this.$message.error('上传头像图片只能是 JPG 格式!')
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!')
+      }
+      return isJPG && isLt2M
     },
     id () {
       this.$axios({
@@ -235,20 +313,19 @@ export default {
         // url: 'admin/user/creatId',
         data: {}
       }).then(data => {
+        console.log('=============')
         console.log(data)
         this.userid = data.data.data
         console.log(this.userid)
       })
     },
-    submitForm (ruleForm) {
+    submitForm (formName) {
       const dttime = this.ruleForm.dttime
       console.log(dttime)
       const formatTime = dttime.getFullYear() + ':' + (dttime.getMonth() + 1) + ':' + dttime.getDate()
-      console.log(formatTime)
-      this.$refs.ruleForm.validate((valid) => {
+      this.$refs[formName].validate((valid) => {
+        const region = localStorage.getItem('region')
         if (valid) {
-          // alert('submit!')
-          const region = localStorage.getItem('region')
           this.$axios({
             method: 'get',
             url: 'temp/admin/user/register',
@@ -257,13 +334,12 @@ export default {
               username: this.ruleForm.username,
               city: this.ruleForm.city,
               dot: this.ruleForm.dot,
-              number: this.ruleForm.number,
-              // cycle: this.ruleForm.cycle,
               dttime: formatTime,
               phone: this.ruleForm.phone,
               region: region,
+              number: this.ruleForm.number,
               state: 0,
-              userType: 2,
+              userType: 3,
               id: this.userid
             }
           }).then(data => {
@@ -312,57 +388,128 @@ export default {
         this.areaMap = getRegionMap(this.ruleForm.city)
       }
     }
+
   }
 }
 </script>
 
 <style lang="less">
-.custom-from-item {
-  .el-form-item__content {
-    text-align: left;
-  }
-  .el-select {
-    // display: block;
-    width: 100%;
-  }
+.el-select {
+  width:30%;
 }
-.jfbdv {text-align: left;}
-.kehu-1 {
-  .el-button--primary {
-    width:370px;
-    height:60px;
-    background:rgba(229,1,19,1);
-    border-radius:32px;
-    // margin-top: 70px;
+.clearfix:after,
+.clearfix:before{
+  content: "";
+  display: table;
   }
-
+  .clearfix:after{
+    clear: both;
+    }
+    .clearfix{
+      *zoom: 1;
+      }
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  float: left;
+}
+.zhixing-1 {
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 20px;
+    color: #8c939d;
+    width: 130px;
+    height: 130px;
+    line-height: 130px;
+    text-align: center;
+  }
+  .avatar {
+    width: 130px;
+    height: 130px;
+    display: block;
+  }
+  .submit-btn {
+    &.el-button--primary {
+      width:370px;
+      height:60px;
+      background:rgba(229,1,19,1);
+      border-radius:32px;
+      margin-bottom: 40px;
+    }
+  }
 }
 </style>
 
 <style lang="less" scoped>
-.kehu {
+.dialog-footer {
+  margin-bottom: 40px;
+}
+.hbdfbvdf {
   width: 100%;
-  // height: 100%;
+  height: 180px;
+}
+.p1 {
+  text-align: center;
+}
+.dhv {
+  height: 40px;
+}
+.zhixing {
+  width: 100%;
   padding: 70px 10px;
   box-sizing: border-box;
   min-height: 100%;
+  // height: 100%;
   background-color: #fff;
-  margin: 0 auto;
-  .kehu-1 {
+  // margin: 0 auto;
+  .zhixing-1 {
     width: 470px;
-    text-align: center;
+    // text-align: center;
+    height: 100%;
     margin: 0 auto;
-    // padding-top: 120px;
+    padding-top: 30px;
     p{
       font-size:30px;
       font-family:PingFangSC-Medium,PingFang SC;
       font-weight:500;
       color:rgba(51,51,51,1);
       line-height:42px;
-      margin-bottom: 70px;
+      margin-bottom: 40px;
+    }
+    .hjdiv {
+      font-size:18px;
+      font-family:PingFangSC-Regular,PingFang SC;
+      font-weight:400;
+      color:rgba(68,65,65,1);
+      line-height:18px;
+      margin-bottom: 10px;
+      margin-top: 10px;
+    }
+    .sdivb {
+      font-size:18px;
+      font-family:PingFangSC-Regular,PingFang SC;
+      font-weight:400;
+      color:rgba(68,65,65,1);
+      line-height:25px;
+      margin: 20px 0;
+    }
+    .drvdfvb {
+      // display: block;
+      font-size:14px;
+      font-family:PingFangSC-Regular,PingFang SC;
+      font-weight:400;
+      color:rgba(135,136,137,1);
+      line-height:20px;
+      margin-bottom: 15px;
     }
   }
 }
+
 .top {
   // width: 100%;
   // margin: 0 auto;

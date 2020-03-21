@@ -1,28 +1,23 @@
 <template>
-  <div class="login">
-    <div class="login-beijing">
-      <div class="login-top">
-        包裹贴监控系统
-      </div>
-      <div class="login-content">
-        <div class="login-login">
-          <div class="login-login-top">
-            <p>
-              包裹贴监控系统
-            </p>
-          </div>
-          <el-form ref="form" :model="form" label-width="80px">
-            <el-form-item>
-              <el-input type="username" placeholder="请输入用户名" v-model="form.username"></el-input>
-            </el-form-item>
-            <el-form-item>
-              <el-input type="password" placeholder="请输入密码" v-model="form.password"></el-input>
-            </el-form-item>
-          </el-form>
-          <div class="btn" @click="login">登录</div>
+  <div class="login mb-mode">
+    <div class="img-wrap">
+      <img src="@/assets/mb-logo.png" alt="">
+      <img class="mb-logo-append" src="@/assets/mb-logo-append.png" alt="">
+    </div>
+    <form class="form">
+      <div class="input-group clearfix">
+        <img class="input-group__icon" src="@/assets/phone.png" alt="">
+        <div class="input-group__input-warp">
+          <input class="input-group__input" type="text">
         </div>
       </div>
-    </div>
+      <div class="input-group clearfix">
+        <img class="input-group__icon" src="@/assets/pwd.png" alt="">
+        <div class="input-group__input-warp">
+          <input class="input-group__input" type="text">
+        </div>
+      </div>
+    </form>
   </div>
 </template>
 
@@ -93,9 +88,54 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.mb-mode {
+  &.login {
+    width: 100%;
+    .img-wrap {
+      width: 100%;
+      img {
+        width: 100%;
+        vertical-align: top;
+      }
+      .mb-logo-append {
+        margin-top: -3px;
+        // padding-top: 1px;
+        background-color: #fe2a50;
+        border: none;
+        outline: none;
+      }
+    }
+  }
+  .form {
+    margin-top: 20px;
+    box-sizing: border-box;
+    padding: 0px 20px;
+  }
+  .input-group {
+    height: 40px;
+    margin-bottom: 10px;
+    .input-group__input-warp {
+      margin-left: 40px;
+    }
+    .input-group__icon {
+      width: 20px;
+      height: 26px;
+      float: left;
+      line-height: 26px;
+      padding: 7px 5px;
+    }
+    .input-group__input {
+      box-sizing: border-box;
+      width: 100%;
+      // width: calc(100% - 45px);
+      // margin-left: 40px;
+      height:40px;
+      border-radius:4px;
+      border:1px solid rgba(51,51,51,1);
+    }
+  }
+}
   .login {
-    height: 100vh;
-    width: 100vw;
     .login-beijing {
       height: 100vh;
       width: 100vw;

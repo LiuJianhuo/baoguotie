@@ -1,28 +1,34 @@
 <template>
   <div class="daili">
     <div class="top">
-      <input class="input" v-model="input" placeholder="请输入需要搜索的内容">
-      <button class="btn-1" @click="SS">搜索</button>
+      <input class="input" v-model="searchVal" placeholder="请输入需要搜索的内容">
+      <button class="btn-1" @click="handleSearch">搜索</button>
       <button class="btn-2" @click="xinzengdailibaobei=true">新增代理报备</button>
     </div>
     <div class="center">
       <div class="center-1">
-        <div>报备时间</div>
         <div>代理公司</div>
         <div>联系方式</div>
         <div>代理城市</div>
         <div>代理价格</div>
         <div>合同影印件</div>
+        <div>报备时间</div>
       </div>
       <div class="center-2">
         <ul v-for="item in list" :key="item.id">
           <li>
-            <div>{{item.createTime}}</div>
             <div>{{item.username}}</div>
             <div>{{item.phone}}</div>
             <div>{{item.province}} {{item.city}}</div>
             <div>{{item.price}}</div>
-            <div><img :src="item.contractimg" alt=""></div>
+            <div>
+              <el-image
+                style="width: 120px; height: 63px"
+                :src="item.contractimg"
+                :preview-src-list="[item.contractimg]">
+              </el-image>
+            </div>
+            <div>{{item.createTime}}</div>
           </li>
         </ul>
       </div>
@@ -50,7 +56,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="代理价格" prop="price">
-            <el-input v-model="ruleForm.price" placeholder="请输入代理价格"></el-input>
+            <el-input v-model="ruleForm.price" placeholder="请输入代理价格，保留小数点后两位"></el-input>
           </el-form-item>
             <div>合同影印件</div>
             <div class="clearfix knjsovosv">
@@ -115,6 +121,7 @@ export default {
       imageUrl1: '',
       list: [],
       userid: '',
+      searchVal: '',
       ruleForm: {
         region: '',
         username: '',
@@ -149,6 +156,9 @@ export default {
     this.getList()
   },
   methods: {
+    handleSearch () {
+    },
+    beforeAvatarUpload () {},
     handleRegionChange (regionName) {
       console.log(regionName)
       this.ruleForm.province = ''
@@ -156,10 +166,6 @@ export default {
       this.ruleForm.area = ''
       this.provinceList = getProvinceListFromRegionName(regionName)
       console.log(getProvinceListFromRegionName(regionName))
-    },
-    // 搜索方法
-    SS () {
-
     },
     id () {
       this.$axios({

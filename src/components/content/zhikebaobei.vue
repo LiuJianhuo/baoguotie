@@ -1,31 +1,45 @@
 <template>
   <div class="kehu">
     <div class="top">
-      <input class="input" v-model="input" placeholder="请输入需要搜索的内容">
+      <input class="searchVal" v-model="input" placeholder="请输入需要搜索的内容">
       <button class="btn-1">搜索</button>
       <button class="btn-2" @click="outerVisible=true">新增直客报备</button>
     </div>
     <div class="center">
       <div class="center-1">
-        <div>报备时间</div>
         <div>客户名称</div>
         <div>联系方式</div>
+         <div>客户价格</div>
+        <div>客户来源</div>
         <div>投放城市</div>
         <div>投放网点</div>
-        <!-- <div>投放数量</div> -->
-        <div>合约金额</div>
+        <div>投放周期</div>
+        <div>投放数量</div>
+        <!-- <div>合约金额</div> -->
         <div>合同影印件</div>
+        <div>报备时间</div>
       </div>
       <div class="center-2">
         <ul v-for="item in list" :key="item.id">
           <li>
-            <div>{{item.createTime}}</div>
             <div>{{item.username}}</div>
             <div>{{item.phone || '--'}}</div>
+            <div>{{item.customPrice}}</div>
+            <div>{{item.customFrom}}</div>
             <div>{{item.province}} {{item.city}}</div>
             <div>{{item.dot}}</div>
-            <div>{{item.price}}</div>
-            <div><img :src="item.contractimg" alt=""></div>
+            <div>{{item.dttime}}{{item.dttime1 && '-' + item.dttime1}}</div>
+            <div>{{item.number}}</div>
+            <!-- <div>{{item.price}}</div> -->
+            <!-- <div><img :src="item.contractimg" alt=""></div> -->
+            <div>
+              <el-image
+                style="width: 120px; height: 63px"
+                :src="item.contractimg"
+                :preview-src-list="[item.contractimg]">
+              </el-image>
+            </div>
+            <div>{{item.createTime}}</div>
           </li>
         </ul>
       </div>
@@ -39,6 +53,22 @@
           </el-form-item>
           <el-form-item label="联系方式" prop="phone">
             <el-input v-model="ruleForm.phone" placeholder="请输入手机号"></el-input>
+          </el-form-item>
+          <el-form-item label="客户价格" prop="customPrice">
+            <el-input v-model="ruleForm.customPrice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
+          </el-form-item>
+          <el-form-item label="客户来源" prop="customFrom" class="custom-from-item">
+            <!-- <el-input v-model="ruleForm.customFrom" placeholdetngr="请输入客户来源"></el-input> -->
+            <el-select v-model="ruleForm.customFrom" placeholder="请选择客户来源">
+              <el-option label="中快总部" value="中快总部"></el-option>
+              <el-option label="华东区域" value="华东区域"></el-option>
+              <el-option label="华南区域" value="华南区域"></el-option>
+              <el-option label="华中区域" value="华中区域"></el-option>
+              <el-option label="华北区域" value="华北区域"></el-option>
+              <el-option label="西南区域" value="西南区域"></el-option>
+              <el-option label="西北区域" value="西北区域"></el-option>
+              <el-option label="东北区域" value="东北区域"></el-option>
+            </el-select>
           </el-form-item>
           <!-- <el-form-item label="投放城市" prop="city">
             <el-input v-model="ruleForm.city" placeholder="投放城市"></el-input>
@@ -58,11 +88,33 @@
           <el-form-item label="投放网点" prop="dot">
             <el-input v-model="ruleForm.dot" placeholder="请输入投放网点"></el-input>
           </el-form-item>
-          <el-form-item label="合约金额" prop="price">
-            <el-input v-model="ruleForm.price" placeholder="请输入合约金额"></el-input>
+           <el-form-item label="投放周期">
+              <el-col :span="10">
+                <el-date-picker type="date" placeholder="选择开始日期" v-model="ruleForm.dttime" style="width: 80%;"></el-date-picker>
+              </el-col>
+              <el-col :span="10">
+                <el-date-picker type="date" placeholder="选择结束日期" v-model="ruleForm.dttime1" style="width: 80%;"></el-date-picker>
+              </el-col>
+            </el-form-item>
+          <el-form-item label="投放数量" prop="number">
+            <el-input v-model="ruleForm.number" placeholder="投放数量" @input="val => ruleForm.number = val.match(/\d*/)[0]"></el-input>
           </el-form-item>
+          <!-- <el-form-item label="合约金额" prop="price">
+            <el-input v-model="ruleForm.price" placeholder="请输入合约金额" @input="handleFormateToNumber" @blur="e => {ruleForm.price = ruleForm.price.endsWith('.') ? ruleForm.price.replace('.', '') : ruleForm.price}"></el-input>
+          </el-form-item> -->
             <div style="text-align:left;margin-bottom: 10px"><span class="c-red">*</span>合同影印件</div>
-            <el-upload
+            <div class="clearfix">
+              <el-upload
+                class="avatar-uploader"
+                :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
+                :show-file-list="false"
+                :on-success="handleAvatarSuccess1"
+                :before-upload="beforeAvatarUpload">
+                <img v-if="imageUrl1" :src="imageUrl1" class="avatar">
+                <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+              </el-upload>
+            </div>
+            <!-- <el-upload
               class="avatar-uploader"
               :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
               :show-file-list="false"
@@ -70,9 +122,9 @@
               :before-upload="beforeAvatarUpload">
               <img v-if="imageUrl1" :src="imageUrl1" class="avatar">
               <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-            </el-upload>
+            </el-upload> -->
           <el-form-item>
-            <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
+            <el-button class="submit-btn" type="primary" @click="submitForm('ruleForm')">提交</el-button>
           </el-form-item>
         </el-form>
         <el-dialog
@@ -114,9 +166,12 @@ export default {
       regionList: getRegionList(),
       provinceList: null,
       cityList: null,
+      searchVal: '',
       actions,
       imageUrl1: '',
       list: '',
+      input: '',
+      userid: '',
       provinceMap: getProvinceMap(), // 省份
       cityMap: null, // 城市
       centerDialogVisible: false,
@@ -137,6 +192,12 @@ export default {
         city: [
           { required: true, message: '请输入投放城市', trigger: 'blur' }
         ],
+        customPrice: [
+          { required: true, message: '请输入客户价格', trigger: 'blur' }
+        ],
+        customFrom: [
+          { required: true, message: '请输入客户来源', trigger: 'blur' }
+        ],
         dot: [
           { required: true, message: '请输入投放网点', trigger: 'blur' }
         ],
@@ -145,6 +206,9 @@ export default {
         ],
         contract: [
           { required: true, message: '请输入合同影印件', trigger: 'blur' }
+        ],
+        number: [
+          { required: true, message: '请输入投放数量', trigger: 'blur' }
         ],
         phone: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
@@ -158,6 +222,20 @@ export default {
     this.getList()
   },
   methods: {
+    hanldeFormatNumberWithFocus (val) {
+      const num = val.match(/^\d+(\.?\d{0,2})/)
+      this.ruleForm.customPrice = num && num[0]
+    },
+    handleFormatNumberAfterBlur () {
+      const price = this.ruleForm.customPrice
+      this.ruleForm.customPrice = price.endsWith('.') ? price.replace('.', '') : price
+    },
+    handleFormateToNumber (val) {
+      const num = val.match(/^\d+(\.?\d{0,2})/)
+      this.ruleForm.price = num && num[0]
+    },
+    beforeAvatarUpload () {
+    },
     handleRegionChange (regionName) {
       console.log(regionName)
       this.ruleForm.province = ''
@@ -280,7 +358,9 @@ export default {
     border-radius:32px;
     // margin-top: 70px;
   }
-
+  .el-image-viewer__img {
+    min-width: 300px;
+  }
 }
 </style>
 
@@ -415,5 +495,8 @@ export default {
       }
     }
   }
+}
+.submit-btn {
+  margin-top: 15px;
 }
 </style>

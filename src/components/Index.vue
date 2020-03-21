@@ -5,7 +5,7 @@
         <span class="span1">包裹贴监控系统</span>
       </el-header>
       <el-container>
-        <el-aside>
+        <el-aside class="side-bar">
           <!-- ---------------------------------------------------------------- -->
               <el-menu
                 default-active="2"
@@ -32,13 +32,19 @@
                     <i class="el-icon-menu"></i>
                     <span slot="title">执行报备</span>
                   </el-menu-item>
+                  <!-- <el-menu-item index="zhikebaobei" :route="{name:'zhikebaobei'}">
+                    <i class="el-icon-menu"></i>
+                    <span slot="title">直客报备</span>
+                  </el-menu-item> -->
+                </div>
+                <div id="head">
+                  <div class="jsdhifvibv">中快总部</div>
                   <el-menu-item index="zhikebaobei" :route="{name:'zhikebaobei'}">
                     <i class="el-icon-menu"></i>
                     <span slot="title">直客报备</span>
                   </el-menu-item>
                 </div>
               </el-menu>
-          <!-- ---------------------------------------------------------------- -->
         </el-aside>
         <el-main>
           <router-view></router-view>
@@ -70,12 +76,15 @@ export default {
     yyyy () {
       const region = localStorage.getItem('region')
       if (region === '三通一达') {
-        document.getElementById('yy').style.display = 'none'
         document.getElementById('yr').style.display = 'inline'
-      } else if (region === 'null') {
+        document.getElementById('yy').style.display = 'none'
+        document.getElementById('head').style.display = 'none'
+      } else if (region === 'null') { // 中部
         document.getElementById('yy').style.display = 'inline'
         document.getElementById('yr').style.display = 'inline'
-      } else {
+        document.getElementById('head').style.display = 'inline'
+      } else { // 区域
+        document.getElementById('head').style.display = 'none'
         document.getElementById('yy').style.display = 'inline'
         document.getElementById('yr').style.display = 'none'
       }
@@ -85,6 +94,11 @@ export default {
 </script>
 
 <style lang='less'>
+.side-bar {
+  &.el-aside {
+    width: 200px !important;
+  }
+}
 li {
   list-style: none;
 }
