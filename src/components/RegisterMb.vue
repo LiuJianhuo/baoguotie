@@ -1,15 +1,21 @@
 <template>
-  <div class="login mb-mode">
+  <div class="register mb-mode">
     <div class="img-wrap">
       <div class="line-over"></div>
       <img src="@/assets/mb-logo.png" alt="">
       <img class="mb-logo-append" src="@/assets/mb-logo-append.png" alt="">
-      <p class="title">登录</p>
+      <p class="title">注册</p>
     </div>
-    <el-form class="form" ref="form" :model="form">
+    <el-form class="form" ref="form" :model="form" @submit.native.prevent>
       <el-form-item class="predend-icon-item">
         <el-input v-model="form.name" placeholder="请输入手机号">
           <template slot="prepend"><img class="icon" src="@/assets/phone.png" alt=""></template>
+        </el-input>
+      </el-form-item>
+      <el-form-item class="predend-icon-item append-icon-item">
+        <el-input v-model="form.name" placeholder="请输入验证码">
+          <template slot="prepend"><img class="icon" src="@/assets/phone.png" alt=""></template>
+          <template slot="append"><div class="code-box-warp"><button class="code-box" :class="timeId ? 'active' : ''" @click="handleGetCode">{{codeText}}</button></div></template>
         </el-input>
       </el-form-item>
       <el-form-item class="predend-icon-item">
@@ -17,8 +23,13 @@
           <template slot="prepend"><img class="icon" src="@/assets/pwd.png" alt=""></template>
         </el-input>
       </el-form-item>
+      <el-form-item class="predend-icon-item">
+        <el-input v-model="form.name" placeholder="确认密码">
+          <template slot="prepend"><div class="icon"></div></template>
+        </el-input>
+      </el-form-item>
       <div class="btn-group">
-        <button class="btn">登录</button>
+        <button class="btn" @click="handleRegister">注册</button>
       </div>
     </el-form>
   </div>
@@ -32,6 +43,8 @@ export default {
         username: '',
         password: ''
       },
+      timeId: null,
+      codeText: '获取验证码',
       rules: {
         userword: [
           { required: true, message: '请输出用户名', trigger: 'blur' }
@@ -43,6 +56,24 @@ export default {
     }
   },
   methods: {
+    // 获取验证码
+    handleGetCode () {
+      // timeId 定时器存在，说明还在倒计时，不能获取验证码
+      if (this.timeId) {
+        return
+      }
+      let remainTime = 60
+      this.codeText = remainTime + 's后重新获取'
+      this.timeId = setInterval(() => {
+        this.codeText = --remainTime + 's后重新获取'
+        if (remainTime < 0) {
+          clearInterval(this.timeId)
+          this.timeId = null
+          this.codeText = '获取验证码'
+        }
+      }, 1000)
+    },
+    handleRegister () {},
     onSubmit () {
       console.log('submit!')
     },
@@ -89,29 +120,9 @@ export default {
   }
 }
 </script>
-<style lang="less">
-.el-form-item {
-  &.predend-icon-item {
-    .el-input-group__prepend {
-      padding-left: 0px;
-      padding-right: 9px;
-      background-color: #ffffff;
-      border: none;
-      .icon {
-        width: 11.55px;
-        height: 15.33px;
-      }
-    }
-    .el-input__inner {
-      border-radius: 3.3px;
-    }
-  }
-}
-</style>
-
 <style lang="less" scoped>
 .mb-mode {
-  &.login {
+  &.register {
     width: 100%;
     .title {
       width: 100%;
@@ -152,6 +163,20 @@ export default {
     box-sizing: border-box;
     padding: 0px 13.67px;
     background-color: #ffffff;
+  }
+  .code-box {
+    display: block;
+    width: 113px;
+    height: 40px;
+    line-height: 40px;
+    border: 1px solid #DCDFE6;
+    border-radius: 3.3px;
+    margin-left: 7px;
+    color: #666666;
+    background-color: #ffffff;
+    &.active {
+      color: #fe2a50;
+    }
   }
 }
 </style>

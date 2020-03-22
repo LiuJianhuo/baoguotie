@@ -22,7 +22,34 @@ export default {
     color: #ffffff;
   }
 }
+// form input项
+.el-form-item {
+  &.predend-icon-item {
+    .el-input-group__prepend {
+      padding-left: 0px;
+      padding-right: 9px;
+      background-color: #ffffff;
+      border: none;
+      .icon {
+        width: 11.55px;
+        height: 15.33px;
+      }
+    }
+    .el-input__inner {
+      border-radius: 3.3px;
+    }
+  }
+  &.append-icon-item {
+    .el-input-group__append {
+      padding-left: 0px;
+      padding-right: 0px;
+      background-color: #ffffff;
+      border: none;
+    }
+  }
+}
 </style>
+<!-- 公共样式 -->
 <style lang="less">
 .c-red {
   color: #F56C6C;
@@ -43,6 +70,26 @@ export default {
 * {
   padding: 0px;
   margin: 0px;
+}
+// 按钮
+button {
+  border: none;
+  outline: none;
+}
+.btn-group {
+  text-align: center;
+  .btn {
+    background-color: #fe2a50;
+    color: #ffffff;
+    width:6.453333rem;
+    font-size:14px;
+    height: 40px;
+    line-height: 40px;
+    font-family:PingFangSC-Medium,PingFang SC;
+    font-weight:500;
+    color:rgba(255,255,255,1);
+    border-radius: 60px;
+  }
 }
 </style>
 <style lang="less" scope>

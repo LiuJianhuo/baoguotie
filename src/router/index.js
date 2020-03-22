@@ -34,7 +34,8 @@ const router = new VueRouter({
       ]
     },
     { path: '/login', component: Login },
-    { path: '/mb/login', component: LoginMb, name: 'loginMb' }
+    { path: '/mb/login', component: LoginMb, name: 'loginMb' },
+    { path: '/mb/register', component: () => import('@/components/RegisterMb.vue'), name: 'registerMb' }
   ]
 })
 
