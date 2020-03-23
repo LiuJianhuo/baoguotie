@@ -2,19 +2,18 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Index from '../components/Index.vue'
 import Login from '../components/Login.vue'
-import LoginMb from '../components/LoginMb.vue'
 import yewujieshao from '../components/content/yewujieshao.vue'
 import dailibaobei from '../components/content/dailibaobei.vue'
 import kehubaobei from '../components/content/kehubaobei.vue'
 import zhikebaobei from '../components/content/zhikebaobei.vue'
 import zhixingbaobei from '../components/content/zhixingbaobei.vue'
-import zhixingbaobeiMb from '../components/mb/zhixingbaobei.vue'
+import device from '@/utils/device'
 
 Vue.use(VueRouter)
 
 const router = new VueRouter({
   routes: [
-    { path: '/', redirect: '/login' },
+    { path: '/', name: 'enter' },
     { path: '/index',
       component: Index,
       name: 'index',
@@ -26,17 +25,26 @@ const router = new VueRouter({
         { path: 'zhixingbaobei', component: zhixingbaobei, name: 'zhixingbaobei' }
       ]
     },
+    { path: '/login', component: Login, name: 'login' },
     { path: '/mb',
-      component: Index,
+      component: () => import('@/App.vue'),
       name: 'mb',
+      redirect: '/mb/login',
       children: [
-        { path: 'zhixingbaobei', component: zhixingbaobeiMb, name: 'zhixingbaobeiMb' }
+        { path: 'login', component: () => import('@/views/LoginMb.vue'), name: 'loginMb' },
+        { path: 'register', component: () => import('@/views/RegisterMb.vue'), name: 'registerMb' },
+        { path: 'index', component: () => import('@/views/IndexMb.vue'), name: 'indexMb' }
       ]
-    },
-    { path: '/login', component: Login },
-    { path: '/mb/login', component: LoginMb, name: 'loginMb' },
-    { path: '/mb/register', component: () => import('@/components/RegisterMb.vue'), name: 'registerMb' }
+    }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.name === 'enter') {
+    next({ name: device.isMobile ? 'loginMb' : 'login' })
+    return
+  }
+  next()
 })
 
 // 创建一个理由对象

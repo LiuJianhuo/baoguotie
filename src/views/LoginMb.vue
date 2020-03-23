@@ -3,41 +3,49 @@
     <div class="img-wrap">
       <div class="line-over"></div>
       <img src="@/assets/mb-logo.png" alt="">
-      <img class="mb-logo-append" src="@/assets/mb-logo-append.png" alt="">
+      <img class="logo-append" src="@/assets/mb-logo-append.png" alt="">
       <p class="title">登录</p>
     </div>
-    <el-form class="form" ref="form" :model="form">
-      <el-form-item class="predend-icon-item">
-        <el-input v-model="form.name" placeholder="请输入手机号">
+    <el-form class="form" ref="form" :model="form" @submit.native.prevent :rules="rules">
+      <el-form-item class="predend-icon-item" prop="phone">
+        <el-input v-model="form.phone" placeholder="请输入手机号" v-pure-number>
           <template slot="prepend"><img class="icon" src="@/assets/phone.png" alt=""></template>
         </el-input>
       </el-form-item>
-      <el-form-item class="predend-icon-item">
-        <el-input v-model="form.name" placeholder="请输入密码">
+      <el-form-item class="predend-icon-item" prop="password">
+        <el-input v-model="form.password" type="password" placeholder="请输入密码">
           <template slot="prepend"><img class="icon" src="@/assets/pwd.png" alt=""></template>
         </el-input>
+        <router-link :to="{ name: 'registerMb' }" class="register-link">注册</router-link>
       </el-form-item>
       <div class="btn-group">
-        <button class="btn">登录</button>
+        <button class="btn" @click="handleLogin">登录</button>
       </div>
     </el-form>
   </div>
 </template>
 
 <script>
+import { login } from '@/api'
 export default {
   data () {
+    const validatePhone = (rule, value, callback) => {
+      if (value && !(/^1\d{10}/.test(value))) {
+        return callback(new Error('手机号不正确'))
+      }
+    }
     return {
       form: {
         username: '',
         password: ''
       },
       rules: {
-        userword: [
-          { required: true, message: '请输出用户名', trigger: 'blur' }
+        phone: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { required: true, validator: validatePhone, trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '请输出密码', trigger: 'blur' }
+          { required: true, message: '请输入密码', trigger: 'blur' }
         ]
       }
     }
@@ -46,49 +54,38 @@ export default {
     onSubmit () {
       console.log('submit!')
     },
-    login () {
-      console.log('我点击了登录按钮')
+    handleLogin () {
       this.$refs.form.validate((valid) => {
         if (valid) {
-          this.$axios({
-            method: 'get',
-            url: 'temp/admin/user/login',
-            // url: 'admin/user/login',
-            params: {
-              username: this.form.username,
-              password: this.form.password
-            }
+          login({
+            username: this.form.username,
+            password: this.form.password
           }).then(data => {
-            // console.log('我是登录成功')
-            // console.log(data.data.data.region)
-            // console.log(data)
-            // console.log(data.data.msg)
-            // const msg = data.data.msg
-            if (data.data.code === '10000') {
-              // alert('登录' + msg)
-              this.$message({ message: '登录成功', type: 'success', duration: 900 })
-              localStorage.setItem('region', data.data.data.region)
-              const region = localStorage.getItem('region')
-              const time = setTimeout(() => {
-                this.$router.push({ name: 'index' })
-                clearTimeout(time)
-              }, 250)
-              // return false
-              console.log(region)
-            } else {
-              return false
-            }
+            this.$message({ message: '登录成功', type: 'success', duration: 900 })
+            localStorage.setItem('region', data.region)
+            const time = setTimeout(() => {
+              this.$router.push({ name: 'index' })
+              clearTimeout(time)
+            }, 250)
+          }).catch(err => {
+            this.$message({ message: err.message, type: 'error', duration: 1220000 })
           })
-          // alert('登陆成功')
-        } else {
-          console.log('失败了')
-          return false
         }
       })
     }
   }
 }
 </script>
+<style lang="less">
+@media screen and (max-width: 800px) {
+  .el-message {
+    min-width: 300px;
+    .el-icon-error {
+      font-size: 15px;
+    }
+  }
+}
+</style>
 <style lang="less">
 .el-form-item {
   &.predend-icon-item {
@@ -131,7 +128,7 @@ export default {
         width: 100%;
         vertical-align: top;
       }
-      .mb-logo-append {
+      .logo-append {
         margin-top: -3px;
         // padding-top: 1px;
         background-color: #fe2a50;
@@ -152,6 +149,15 @@ export default {
     box-sizing: border-box;
     padding: 0px 13.67px;
     background-color: #ffffff;
+  }
+  .register-link {
+    position: absolute;
+    bottom: -22px;
+    right: 0px;
+    height: 22px;
+    line-height: 22px;
+    font-size: 12px;
+    text-decoration: underline;
   }
 }
 </style>

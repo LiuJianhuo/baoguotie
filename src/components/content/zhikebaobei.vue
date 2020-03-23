@@ -3,7 +3,7 @@
     <div class="top">
       <input class="searchVal" v-model="input" placeholder="请输入需要搜索的内容">
       <button class="btn-1">搜索</button>
-      <button class="btn-2" @click="outerVisible=true">新增直客报备</button>
+      <button class="btn-2" @click="outerVisible=true; id()">新增直客报备</button>
     </div>
     <div class="center">
       <div class="center-1">
@@ -52,7 +52,7 @@
             <el-input v-model="ruleForm.username" placeholder="请输入客户名称"></el-input>
           </el-form-item>
           <el-form-item label="联系方式" prop="phone">
-            <el-input v-model="ruleForm.phone" placeholder="请输入手机号"></el-input>
+            <el-input v-model="ruleForm.phone" placeholder="请输入手机号" v-pure-number></el-input>
           </el-form-item>
           <el-form-item label="客户价格" prop="customPrice">
             <el-input v-model="ruleForm.customPrice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
@@ -108,10 +108,12 @@
                 class="avatar-uploader"
                 :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
                 :show-file-list="false"
+                :on-error="handleUploadError"
                 :on-success="handleAvatarSuccess1"
                 :before-upload="beforeAvatarUpload">
                 <img v-if="imageUrl1" :src="imageUrl1" class="avatar">
                 <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                <div class="loading" v-loading="loading" element-loading-text="拼命上传中"></div>
               </el-upload>
             </div>
             <!-- <el-upload
@@ -127,16 +129,6 @@
             <el-button class="submit-btn" type="primary" @click="submitForm('ruleForm')">提交</el-button>
           </el-form-item>
         </el-form>
-        <el-dialog
-          title=""
-          :visible.sync="centerDialogVisible"
-          width="50%"
-          append-to-body>
-          <div class="dbsiv">提交成功</div>
-          <span slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="centerDialogVisible1">确 定</el-button>
-          </span>
-        </el-dialog>
       </div>
     </el-dialog>
   </div>
@@ -145,7 +137,7 @@
 <script>
 import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
 import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName, getAreaListFromCityName } from '@/components/uitl/jsAddress.js'
-
+import { createUserId, getUserList, userRegister } from '@/api'
 import actions from '../../config/ima'
 export default {
   data () {
@@ -185,6 +177,7 @@ export default {
         province: '',
         phone: ''
       },
+      loading: false,
       rules: {
         username: [
           { required: true, message: '请输入客户名称', trigger: 'blur' }
@@ -218,7 +211,7 @@ export default {
     }
   },
   mounted () {
-    this.id()
+    // this.id()
     this.getList()
   },
   methods: {
@@ -235,6 +228,17 @@ export default {
       this.ruleForm.price = num && num[0]
     },
     beforeAvatarUpload () {
+      if (this.userid) {
+        // 上传失败，显示上传中提示
+        this.loading = true
+        return
+      }
+      this.$message({
+        typ: 'error',
+        message: '上传失败,请重新上传',
+        duration: 900
+      })
+      return false
     },
     handleRegionChange (regionName) {
       console.log(regionName)
@@ -246,33 +250,28 @@ export default {
     },
     getList () {
       const region = localStorage.getItem('region')
-      this.$axios({
-        method: 'get',
-        url: 'temp/admin/user/list',
-        // url: 'admin/user/list',
-        params: {
-          userType: 4,
-          region: region,
-          page: 1,
-          row: 10
-        }
+      getUserList({
+        userType: 4,
+        region: region,
+        page: 1,
+        row: 10
       }).then(data => {
         console.log('这是直客报备数据')
         console.log(data)
-        this.list = data.data.data.list
+        this.list = data.list
         console.log(this.list)
+      }).catch(err => {
+        console.log('执客报备用户列表：' + err.message)
       })
     },
     id () {
-      this.$axios({
-        method: 'get',
-        url: 'temp/admin/user/creatId',
-        // url: 'admin/user/creatId',
-        data: {}
-      }).then(data => {
+      if (this.userid) return
+      createUserId().then(data => {
         console.log(data)
-        this.userid = data.data.data
+        this.userid = data
         console.log(this.userid)
+      }).catch(err => {
+        console.log('执客报备用户id创建：' + err.message)
       })
     },
     submitForm (ruleForm) {
@@ -280,31 +279,24 @@ export default {
         const region = localStorage.getItem('region')
         if (valid) {
           // alert('submit!')
-          this.$axios({
-            method: 'get',
-            url: 'temp/admin/user/register',
-            // url: 'admin/user/register',
-            params: {
-              username: this.ruleForm.username,
-              city: this.ruleForm.city,
-              dot: this.ruleForm.dot,
-              price: this.ruleForm.price,
-              contract: this.ruleForm.contract,
-              phone: this.ruleForm.phone,
-              region: region,
-              state: 0,
-              userType: 4,
-              id: this.userid
-            }
+          userRegister({
+            username: this.ruleForm.username,
+            city: this.ruleForm.city,
+            dot: this.ruleForm.dot,
+            price: this.ruleForm.price,
+            contract: this.ruleForm.contract,
+            phone: this.ruleForm.phone,
+            region: region,
+            state: 0,
+            userType: 4,
+            id: this.userid
           }).then(data => {
-            console.log('成功')
-            this.centerDialogVisible = true
+            this.$message({ message: '提交成功', type: 'success', duration: 900 })
             this.ruleForm = ''
             this.getList()
+          }).catch(err => {
+            console.log('执客报备用户注册：' + err.message)
           })
-        } else {
-          console.log('error submit!!')
-          return false
         }
       })
     },
@@ -316,8 +308,17 @@ export default {
       this.outerVisible = false
       this.ruleForm = ''
     },
+    handleUploadError () {
+      this.loading = false
+      this.$message({
+        type: 'error',
+        message: '上传失败，请重新上传',
+        duration: 900
+      })
+    },
     handleAvatarSuccess1 (res, file) {
       this.imageUrl1 = URL.createObjectURL(file.raw)
+      this.loading = false
     },
     // 处理省份改变
     handleProvinceChange (provinceName) {

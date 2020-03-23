@@ -6,27 +6,28 @@
       <img class="mb-logo-append" src="@/assets/mb-logo-append.png" alt="">
       <p class="title">注册</p>
     </div>
-    <el-form class="form" ref="form" :model="form" @submit.native.prevent>
-      <el-form-item class="predend-icon-item">
-        <el-input v-model="form.name" placeholder="请输入手机号">
+    <el-form class="form" ref="form" :model="form" @submit.native.prevent :rules="rules">
+      <el-form-item class="predend-icon-item" prop="phone">
+        <el-input v-model="form.phone" placeholder="请输入手机号" v-pure-number>
           <template slot="prepend"><img class="icon" src="@/assets/phone.png" alt=""></template>
         </el-input>
       </el-form-item>
-      <el-form-item class="predend-icon-item append-icon-item">
-        <el-input v-model="form.name" placeholder="请输入验证码">
-          <template slot="prepend"><img class="icon" src="@/assets/phone.png" alt=""></template>
+      <el-form-item class="predend-icon-item append-icon-item" prop="code">
+        <el-input v-model="form.code" placeholder="请输入验证码">
+          <template slot="prepend"><img class="icon" src="@/assets/identifying-code.png" alt=""></template>
           <template slot="append"><div class="code-box-warp"><button class="code-box" :class="timeId ? 'active' : ''" @click="handleGetCode">{{codeText}}</button></div></template>
         </el-input>
       </el-form-item>
-      <el-form-item class="predend-icon-item">
-        <el-input v-model="form.name" placeholder="请输入密码">
+      <el-form-item class="predend-icon-item" prop="password">
+        <el-input v-model="form.password" type="password" placeholder="请输入密码">
           <template slot="prepend"><img class="icon" src="@/assets/pwd.png" alt=""></template>
         </el-input>
       </el-form-item>
-      <el-form-item class="predend-icon-item">
-        <el-input v-model="form.name" placeholder="确认密码">
+      <el-form-item class="predend-icon-item" prop="passwordAgain">
+        <el-input v-model="form.passwordAgain" type="password" placeholder="请输入确认密码">
           <template slot="prepend"><div class="icon"></div></template>
         </el-input>
+        <router-link :to="{ name: 'loginMb' }" class="login-link">登录</router-link>
       </el-form-item>
       <div class="btn-group">
         <button class="btn" @click="handleRegister">注册</button>
@@ -38,19 +39,41 @@
 <script>
 export default {
   data () {
+    const validatePwdAgain = (rule, value, callback) => {
+      if (!value) {
+        return callback(new Error('请输入确认密码'))
+      }
+      if (this.form.password && this.form.password !== value) {
+        return callback(new Error('密码和确认密码不一致'))
+      }
+    }
+    const validatePhone = (rule, value, callback) => {
+      if (value && !(/^1\d{10}/.test(value))) {
+        return callback(new Error('手机号不正确'))
+      }
+    }
     return {
       form: {
-        username: '',
-        password: ''
+        phone: '',
+        code: '',
+        password: '',
+        passwordAgain: ''
       },
       timeId: null,
       codeText: '获取验证码',
       rules: {
-        userword: [
-          { required: true, message: '请输出用户名', trigger: 'blur' }
+        phone: [
+          { required: true, message: '请输入手机号' },
+          { required: true, validator: validatePhone, trigger: 'blur' }
+        ],
+        code: [
+          { required: true, message: '请输入验证码' }
         ],
         password: [
-          { required: true, message: '请输出密码', trigger: 'blur' }
+          { required: true, message: '请输入密码' }
+        ],
+        passwordAgain: [
+          { required: true, validator: validatePwdAgain, trigger: 'blur' }
         ]
       }
     }
@@ -73,7 +96,13 @@ export default {
         }
       }, 1000)
     },
-    handleRegister () {},
+    handleRegister () {
+      this.$refs.form.validate(valid => {
+        if (valid) {
+          console.log(valid)
+        }
+      })
+    },
     onSubmit () {
       console.log('submit!')
     },
@@ -177,6 +206,15 @@ export default {
     &.active {
       color: #fe2a50;
     }
+  }
+  .login-link {
+    position: absolute;
+    bottom: -22px;
+    right: 0px;
+    height: 22px;
+    line-height: 22px;
+    font-size: 12px;
+    text-decoration: underline;
   }
 }
 </style>

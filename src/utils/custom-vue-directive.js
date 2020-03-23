@@ -1,5 +1,12 @@
 // 自定义指令
 import Vue from 'vue'
+// // 获取节点通过事件对象
+// function _getNodeByTypeByEventObj (tagName, { currentTarget }) {
+//   if (currentTarget.tagName === tagName.toUpperCase()) {
+//     return currentTarget
+//   }
+//   return currentTarget.querySelector(tagName.toLowerCase())
+// }
 
 const handleOnlyInputPureNumber = (e) => {
   const target = e.currentTarget
@@ -18,6 +25,22 @@ Vue.directive('pure-number', {
     el.removeEventListener('input', handleOnlyInputPureNumber)
   }
 })
+// const handleOnlyInputFloatNumber = e => {
+//   const node = _getNodeByTypeByEventObj('input', e)
+//   if (!node) return
+//   const val = node.value
+//   const num = val.match(/^\d+(\.?\d{0,2})/)
+// }
+// Vue.directive('float-number', {
+//   bind (el, binding) {
+//     el.addEventListener('input', handleOnlyInputFloatNumber)
+//     el.addEventListener('blur', handleOnlyInputFloatNumber)
+//   },
+//   unbind (el) {
+//     el.removeEventListener('input', handleOnlyInputFloatNumber)
+//     el.removeEventListener('input', handleOnlyInputFloatNumber)
+//   }
+// })
 
 // const hanldeOnlyInputFloatNumber = (el, { decimalPlaces = '', intPlaces = '' }) => {
 //   let inputNode = el

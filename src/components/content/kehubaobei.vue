@@ -3,7 +3,7 @@
     <div class="top">
       <input class="input" v-model="searchVal" placeholder="请输入需要搜索的内容">
       <button class="btn-1">搜索</button>
-      <button class="btn-2" @click="outerVisible=true">新增客户报备</button>
+      <button class="btn-2" @click="outerVisible=true; id()">新增客户报备</button>
     </div>
     <div class="center">
       <div class="center-1">
@@ -45,7 +45,7 @@
             <el-input v-model="ruleForm.username" placeholder="请输入客户名称"></el-input>
           </el-form-item>
           <el-form-item label="联系方式" prop="phone">
-            <el-input v-model="ruleForm.phone" placeholder="请输入手机号"></el-input>
+            <el-input v-model="ruleForm.phone" placeholder="请输入手机号" v-pure-number></el-input>
           </el-form-item>
           <el-form-item label="客户价格" prop="customPrice">
             <el-input v-model="ruleForm.customPrice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
@@ -94,16 +94,6 @@
             <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
           </el-form-item>
         </el-form>
-        <el-dialog
-          title=""
-          :visible.sync="centerDialogVisible"
-          width="50%"
-          append-to-body>
-          <div class="dbsiv">提交成功</div>
-          <span slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="centerDialogVisible1">确 定</el-button>
-          </span>
-        </el-dialog>
       </div>
     </el-dialog>
   </div>
@@ -112,6 +102,7 @@
 <script>
 import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName, getAreaListFromCityName } from '@/components/uitl/jsAddress.js'
 import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
+import { createUserId, getUserList, userRegister } from '@/api'
 export default {
   data () {
     var checkPhone = (rule, value, callback) => {
@@ -183,7 +174,7 @@ export default {
     // this.setDialogWidth()
   },
   mounted () {
-    this.id()
+    // this.id()
     this.getList()
     // this.generateImgCode()
     window.onresize = () => {
@@ -211,33 +202,26 @@ export default {
     },
     getList () {
       const region = localStorage.getItem('region')
-      this.$axios({
-        method: 'get',
-        url: 'temp/admin/user/list',
-        // url: 'admin/user/list',
-        params: {
-          userType: 2,
-          region: region,
-          page: 1,
-          row: 10
-        }
+      getUserList({
+        userType: 2,
+        region: region,
+        page: 1,
+        row: 10
       }).then(data => {
-        console.log('这是客户报备数据')
-        console.log(data)
-        this.list = data.data.data.list
+        this.list = data.list
         console.log(this.list)
+      }).catch(err => {
+        console.log('客户报备失败:' + err.message)
       })
     },
     id () {
-      this.$axios({
-        method: 'get',
-        url: 'temp/admin/user/creatId',
-        // url: 'admin/user/creatId',
-        data: {}
-      }).then(data => {
+      if (this.userid) return
+      createUserId().then(data => {
         console.log(data)
-        this.userid = data.data.data
+        this.userid = data
         console.log(this.userid)
+      }).catch(err => {
+        console.log('创建用户失败:' + err.message)
       })
     },
     submitForm (ruleForm) {
@@ -249,32 +233,23 @@ export default {
         if (valid) {
           // alert('submit!')
           const region = localStorage.getItem('region')
-          this.$axios({
-            method: 'get',
-            url: 'temp/admin/user/register',
-            // url: 'admin/user/register',
-            params: {
-              username: this.ruleForm.username,
-              city: this.ruleForm.city,
-              dot: this.ruleForm.dot,
-              number: this.ruleForm.number,
-              // cycle: this.ruleForm.cycle,
-              dttime: formatTime,
-              phone: this.ruleForm.phone,
-              region: region,
-              state: 0,
-              userType: 2,
-              id: this.userid
-            }
+          userRegister({
+            username: this.ruleForm.username,
+            city: this.ruleForm.city,
+            dot: this.ruleForm.dot,
+            number: this.ruleForm.number,
+            // cycle: this.ruleForm.cycle,
+            dttime: formatTime,
+            phone: this.ruleForm.phone,
+            region: region,
+            state: 0,
+            userType: 2,
+            id: this.userid
           }).then(data => {
-            console.log('成功')
-            this.centerDialogVisible = true
+            this.$message({ message: '提交成功', type: 'success', duration: 900 })
             this.ruleForm = ''
             this.getList()
           })
-        } else {
-          console.log('error submit!!')
-          return false
         }
       })
     },

@@ -3,7 +3,7 @@
     <div class="top">
       <input class="input" v-model="searchVal" placeholder="请输入需要搜索的内容">
       <button class="btn-1" @click="handleSearch">搜索</button>
-      <button class="btn-2" @click="xinzengdailibaobei=true">新增代理报备</button>
+      <button class="btn-2" @click="xinzengdailibaobei=true; id()">新增代理报备</button>
     </div>
     <div class="center">
       <div class="center-1">
@@ -41,10 +41,10 @@
             <el-input v-model="ruleForm.username" placeholder="请输入代理公司名称"></el-input>
           </el-form-item>
           <el-form-item label="联系方式" prop="phone">
-            <el-input v-model="ruleForm.phone" placeholder="请输入手机号"></el-input>
+            <el-input v-model="ruleForm.phone" placeholder="请输入手机号" v-pure-number></el-input>
           </el-form-item>
           <div><span class="c-red">*</span>代理城市</div>
-          <el-form-item prop="province">
+          <el-form-item prop="city">
             <el-select v-model="ruleForm.region" placeholder="地区  （必 填）" class="aj6" @change="handleRegionChange">
               <el-option v-for="(item, index) in regionList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
@@ -56,19 +56,23 @@
             </el-select>
           </el-form-item>
           <el-form-item label="代理价格" prop="price">
-            <el-input v-model="ruleForm.price" placeholder="请输入代理价格，保留小数点后两位"></el-input>
+            <el-input v-model="ruleForm.price" placeholder="请输入代理价格，保留小数点后两位" @input="hanldeFormatNumberWithInput" @blur="handleFormatNumberAfterBlur"></el-input>
           </el-form-item>
-            <div>合同影印件</div>
+            <div><span class="c-red">*</span> 合同影印件</div>
             <div class="clearfix knjsovosv">
-              <el-upload
-                class="avatar-uploader"
-                :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
-                :show-file-list="false"
-                :on-success="handleAvatarSuccess1"
-                :before-upload="beforeAvatarUpload">
-                <img v-if="imageUrl1" :src="imageUrl1" class="avatar">
-                <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-              </el-upload>
+              <el-form-item prop="contract">
+                <el-upload
+                  class="avatar-uploader"
+                  :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
+                  :show-file-list="false"
+                  :on-success="handleUploadSuccess"
+                  :on-error="handleUploadError"
+                  :before-upload="handleUploadBefore">
+                  <img v-if="ruleForm.contract" :src="ruleForm.contract" class="avatar">
+                  <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                  <div class="loading" v-loading="loading" element-loading-text="拼命上传中"></div>
+                </el-upload>
+              </el-form-item>
             </div>
           <el-form-item>
             <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
@@ -93,6 +97,7 @@
 import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
 import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName, getAreaListFromCityName } from '@/components/uitl/jsAddress.js'
 import actions from '../../config/ima'
+import { createUserId, getUserList, userRegister } from '@/api'
 export default {
   data () {
     var checkPhone = (rule, value, callback) => {
@@ -118,10 +123,10 @@ export default {
       provinceMap: getProvinceMap(), // 省份
       cityMap: null, // 城市
       centerDialogVisible: false,
-      imageUrl1: '',
       list: [],
       userid: '',
       searchVal: '',
+      loading: false,
       ruleForm: {
         region: '',
         username: '',
@@ -136,13 +141,13 @@ export default {
           { required: true, message: '请输入代理公司名称', trigger: 'blur' }
         ],
         city: [
-          { required: true, message: '请输入代理城市', trigger: 'blur' }
+          { required: true, message: '请选择代理城市', trigger: 'blur' }
         ],
         price: [
           { required: true, message: '请输入代理价格', trigger: 'blur' }
         ],
         contract: [
-          { required: true, message: '请输入合同影印件', trigger: 'blur' }
+          { required: true, message: '请上传合同影印件', trigger: 'blur' }
         ],
         phone: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
@@ -152,13 +157,20 @@ export default {
     }
   },
   mounted () {
-    this.id()
+    // this.id()
     this.getList()
   },
   methods: {
+    hanldeFormatNumberWithInput (val) {
+      const num = val.match(/^\d+(\.?\d{0,2})/)
+      this.ruleForm.price = num && num[0]
+    },
+    handleFormatNumberAfterBlur () {
+      const price = this.ruleForm.price
+      this.ruleForm.price = price.endsWith('.') ? price.replace('.', '') : price
+    },
     handleSearch () {
     },
-    beforeAvatarUpload () {},
     handleRegionChange (regionName) {
       console.log(regionName)
       this.ruleForm.province = ''
@@ -168,36 +180,24 @@ export default {
       console.log(getProvinceListFromRegionName(regionName))
     },
     id () {
-      this.$axios({
-        method: 'get',
-        url: 'temp/admin/user/creatId',
-        // url: 'admin/user/creatId',
-        data: {}
-      }).then(data => {
-        console.log(data)
-        this.userid = data.data.data
-        console.log(this.userid)
+      if (this.userid) return
+      createUserId().then(data => {
+        this.userid = data
+      }).catch(err => {
+        console.log('创建用户id失败:' + err.message)
       })
     },
     getList () {
       const region = localStorage.getItem('region')
-      this.$axios({
-        method: 'get',
-        url: 'temp/admin/user/list',
-        // url: 'admin/user/list',
-        params: {
-          userType: 1,
-          region: region,
-          page: 1,
-          row: 10
-        }
+      getUserList({
+        userType: 1,
+        region: region,
+        page: 1,
+        row: 10
       }).then(data => {
-        console.log('这是代理报备数据')
-        console.log(data)
-        this.list = data.data.data.list
-        console.log(this.list)
+        this.list = data.list
       }).catch(err => {
-        console.log(err)
+        console.log('获取代理报备列表失败:' + err.message)
       })
     },
     submitForm (ruleForm) {
@@ -205,30 +205,23 @@ export default {
         if (valid) {
           // alert('submit!')
           const region = localStorage.getItem('region')
-          this.$axios({
-            method: 'get',
-            url: 'temp/admin/user/register',
-            // url: 'admin/user/register',
-            params: {
-              username: this.ruleForm.username,
-              city: this.ruleForm.city,
-              price: this.ruleForm.price,
-              contract: this.ruleForm.contract,
-              phone: this.ruleForm.phone,
-              userType: 1,
-              region: region,
-              id: this.userid,
-              state: 0
-            }
+          userRegister({
+            username: this.ruleForm.username,
+            city: this.ruleForm.city,
+            price: this.ruleForm.price,
+            // contract: this.ruleForm.contract,
+            phone: this.ruleForm.phone,
+            userType: 1,
+            region: region,
+            id: this.userid,
+            state: 0
           }).then(data => {
-            console.log('成功')
             this.centerDialogVisible = true
             this.ruleForm = ''
             this.getList()
+          }).catch(err => {
+            console.log('注册代理报备失败:' + err.message)
           })
-        } else {
-          console.log('error submit!!')
-          return false
         }
       })
     },
@@ -240,8 +233,30 @@ export default {
       this.xinzengdailibaobei = false
       this.ruleForm = ''
     },
-    handleAvatarSuccess1 (res, file) {
-      this.imageUrl1 = URL.createObjectURL(file.raw)
+    handleUploadBefore () {
+      if (this.userid) {
+        // 上传失败，显示上传中提示
+        this.loading = true
+        return
+      }
+      this.$message({
+        typ: 'error',
+        message: '上传失败,请重新上传',
+        duration: 900
+      })
+      return false
+    },
+    handleUploadSuccess (res, file) {
+      this.ruleForm.contract = URL.createObjectURL(file.raw)
+      this.loading = false
+    },
+    handleUploadError () {
+      this.loading = false
+      this.$message({
+        typ: 'error',
+        message: '上传失败,请重新上传',
+        duration: 900
+      })
     },
     // 处理省份改变
     handleProvinceChange (provinceName) {
@@ -336,6 +351,10 @@ export default {
   }
 
 }
+.el-upload {
+  width: 130px;
+  height: 130px;
+}
 </style>
 
 <style lang="less" scoped>
@@ -347,6 +366,10 @@ export default {
     height: 130px;
     line-height: 130px;
     text-align: center;
+  }
+  .avatar {
+    width: 100%;
+    height: 100%;
   }
   .daili {
     padding: 70px 70px;

@@ -619,23 +619,35 @@ function getRegionList () {
     result[item._area] = item.Allcity
     return result
   }, {})
-  console.log('province get map ')
-  console.log(regionMapProvince)
+  // console.log('province get map ')
+  // console.log(regionMapProvince)
   return regionList
 }
+// 获取省份
+function getProvinceList () {
+  if (!regionMapProvince) {
+    getRegionList()
+  }
+  const provinceList = regionList.reduce((result, regionName) => {
+    result = result.concat(getProvinceListFromRegionName(regionName))
+    return result
+  }, [])
+  return provinceList
+}
+
 // 获取省份根据地区
 function getProvinceListFromRegionName (regionName) {
   if (!regionMapProvince) {
     getRegionList()
   }
-  console.log('province get map ')
-  console.log(regionName)
-  console.log(regionMapProvince)
+  // console.log('province get map ')
+  // console.log(regionName)
+  // console.log(regionMapProvince)
   if (!regionMapProvince[regionName]) return
   if (!provinceMapCity) provinceMapCity = {}
   return regionMapProvince[regionName].map(item => {
     provinceMapCity[item.name] = item.cityList
-    console.log(provinceMapCity)
+    // console.log(provinceMapCity)
     return item.name
   })
 }
@@ -662,6 +674,7 @@ export {
   addressInit,
   provinceList,
   getRegionList,
+  getProvinceList,
   getProvinceListFromRegionName,
   getCityListFromProvinceName,
   getAreaListFromCityName

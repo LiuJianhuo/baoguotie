@@ -35,6 +35,9 @@ export default {
         height: 15.33px;
       }
     }
+    .el-form-item__error {
+      padding-left: 21px;
+    }
     .el-input__inner {
       border-radius: 3.3px;
     }
@@ -91,12 +94,54 @@ button {
     border-radius: 60px;
   }
 }
+// 遮罩
+.mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: .5;
+  background: #000;
+  z-index: 900;
+  display: none;
+  &.show {
+    display: block;
+  }
+}
+.overflow-hidden {
+  // position: fixed;
+  // top: 0px;
+  // left: 0px;
+  // width: 100%;
+  overflow: hidden;
+}
 </style>
-<style lang="less" scope>
+<style lang="less" scoped>
 body {
   width: 100%;
 }
 .page {
   width: 100%;
+}
+</style>
+<!-- van 公共样式 -->
+<style lang="less">
+.van-swipe__indicators {
+  // bottom: -10px;
+  // z-index: 1000;
+  .van-swipe__indicator {
+    background-color: #FF2746;
+    opacity: .5;
+    &.van-swipe__indicator--active {
+      opacity: 1;
+    }
+  }
+}
+.van-overflow-hidden {
+  overflow: auto !important;
+}
+.van-overlay {
+  // display: none;
 }
 </style>
