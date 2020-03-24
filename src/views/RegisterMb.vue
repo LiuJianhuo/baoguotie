@@ -37,6 +37,7 @@
 </template>
 
 <script>
+import { register, getIdentifyingCode } from '@/api'
 export default {
   data () {
     const validatePwdAgain = (rule, value, callback) => {
@@ -46,11 +47,13 @@ export default {
       if (this.form.password && this.form.password !== value) {
         return callback(new Error('密码和确认密码不一致'))
       }
+      return callback()
     }
     const validatePhone = (rule, value, callback) => {
       if (value && !(/^1\d{10}/.test(value))) {
         return callback(new Error('手机号不正确'))
       }
+      return callback()
     }
     return {
       form: {
@@ -85,21 +88,44 @@ export default {
       if (this.timeId) {
         return
       }
+      if (!this.form.phone) {
+        this.$message({ message: '请先输入手机号', type: 'error', duration: 900 })
+        return
+      }
       let remainTime = 60
-      this.codeText = remainTime + 's后重新获取'
-      this.timeId = setInterval(() => {
-        this.codeText = --remainTime + 's后重新获取'
-        if (remainTime < 0) {
-          clearInterval(this.timeId)
-          this.timeId = null
-          this.codeText = '获取验证码'
-        }
-      }, 1000)
+      getIdentifyingCode({
+        phone: this.form.phone,
+        type: 2
+      }).then(data => {
+        this.$message({ message: '验证码发送成功', type: 'success', duration: 900 })
+        this.codeText = remainTime + 's后重新获取'
+        this.timeId = setInterval(() => {
+          this.codeText = --remainTime + 's后重新获取'
+          if (remainTime < 0) {
+            clearInterval(this.timeId)
+            this.timeId = null
+            this.codeText = '获取验证码'
+          }
+        }, 1000)
+      }).catch(err => {
+        this.$message({ message: err.message, type: 'error', duration: 900 })
+      })
     },
     handleRegister () {
       this.$refs.form.validate(valid => {
         if (valid) {
-          console.log(valid)
+          register(this.form).then(data => {
+            this.$confirm('您已注册成功', {
+              confirmButtonText: '去登录',
+              showCancelButton: false,
+              showClose: false,
+              center: true
+            }).then(() => {
+              this.$route({ name: 'loginMb' })
+            })
+          }).catch(err => {
+            this.$message({ message: err.message, type: 'error', duration: 900 })
+          })
         }
       })
     },
@@ -215,6 +241,19 @@ export default {
     line-height: 22px;
     font-size: 12px;
     text-decoration: underline;
+  }
+}
+</style>
+<style lang="less">
+@media screen and (max-width: 800px) {
+  .el-message {
+    min-width: 300px;
+    .el-icon-error {
+      font-size: 15px;
+    }
+  }
+  .el-message-box {
+    width: 8rem;
   }
 }
 </style>

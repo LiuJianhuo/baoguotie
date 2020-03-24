@@ -86,7 +86,7 @@
           <div>
             <el-form-item label="投放日期" prop="dttime">
               <el-col :span="10">
-                <el-date-picker type="date" placeholder="请选择投放日期" v-model="ruleForm.dttime" style="width: 85%;"></el-date-picker>
+                <el-date-picker type="date" placeholder="请选择投放日期" v-model="ruleForm.dttime" style="width: 85%;" format="yyyy-MM-dd" value-format="yyyy-MM-dd"></el-date-picker>
               </el-col>
             </el-form-item>
           </div>
@@ -421,14 +421,12 @@ export default {
       this.$refs[formName].validate((valid) => {
         const region = localStorage.getItem('region')
         if (valid) {
-          const dttime = this.ruleForm.dttime
-          const formatTime = dttime.getFullYear() + '-' + (dttime.getMonth() + 1) + '-' + dttime.getDate()
           console.log(this.$refs[formName])
           userRegister({
             username: this.ruleForm.username,
             city: this.ruleForm.city,
             dot: this.ruleForm.dot,
-            dttime: formatTime,
+            dttime: this.ruleForm.dttime,
             phone: this.ruleForm.phone,
             region: region,
             number: this.ruleForm.number,

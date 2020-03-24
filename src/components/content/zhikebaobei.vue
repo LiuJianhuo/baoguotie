@@ -24,11 +24,11 @@
           <li>
             <div>{{item.username}}</div>
             <div>{{item.phone || '--'}}</div>
-            <div>{{item.customPrice}}</div>
-            <div>{{item.customFrom}}</div>
+            <div>{{item.ctprice}}</div>
+            <div>{{item.ctsource}}</div>
             <div>{{item.province}} {{item.city}}</div>
             <div>{{item.dot}}</div>
-            <div>{{item.dttime}}{{item.dttime1 && '-' + item.dttime1}}</div>
+            <div>{{item.startTime}}{{item.endTime && '-' + item.endTime}}</div>
             <div>{{item.number}}</div>
             <!-- <div>{{item.price}}</div> -->
             <!-- <div><img :src="item.contractimg" alt=""></div> -->
@@ -54,12 +54,12 @@
           <el-form-item label="联系方式" prop="phone">
             <el-input v-model="ruleForm.phone" placeholder="请输入手机号" v-pure-number></el-input>
           </el-form-item>
-          <el-form-item label="客户价格" prop="customPrice">
-            <el-input v-model="ruleForm.customPrice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
+          <el-form-item label="客户价格" prop="ctprice">
+            <el-input v-model="ruleForm.ctprice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
           </el-form-item>
-          <el-form-item label="客户来源" prop="customFrom" class="custom-from-item">
-            <!-- <el-input v-model="ruleForm.customFrom" placeholdetngr="请输入客户来源"></el-input> -->
-            <el-select v-model="ruleForm.customFrom" placeholder="请选择客户来源">
+          <el-form-item label="客户来源" prop="ctsource" class="custom-from-item">
+            <!-- <el-input v-model="ruleForm.ctsource" placeholdetngr="请输入客户来源"></el-input> -->
+            <el-select v-model="ruleForm.ctsource" placeholder="请选择客户来源">
               <el-option label="中快总部" value="中快总部"></el-option>
               <el-option label="华东区域" value="华东区域"></el-option>
               <el-option label="华南区域" value="华南区域"></el-option>
@@ -90,10 +90,10 @@
           </el-form-item>
            <el-form-item label="投放周期">
               <el-col :span="10">
-                <el-date-picker type="date" placeholder="选择开始日期" v-model="ruleForm.dttime" style="width: 80%;"></el-date-picker>
+                <el-date-picker type="date" placeholder="选择开始日期" v-model="ruleForm.startTime" style="width: 80%;"></el-date-picker>
               </el-col>
               <el-col :span="10">
-                <el-date-picker type="date" placeholder="选择结束日期" v-model="ruleForm.dttime1" style="width: 80%;"></el-date-picker>
+                <el-date-picker type="date" placeholder="选择结束日期" v-model="ruleForm.endTime" style="width: 80%;"></el-date-picker>
               </el-col>
             </el-form-item>
           <el-form-item label="投放数量" prop="number">
@@ -185,10 +185,10 @@ export default {
         city: [
           { required: true, message: '请输入投放城市', trigger: 'blur' }
         ],
-        customPrice: [
+        ctprice: [
           { required: true, message: '请输入客户价格', trigger: 'blur' }
         ],
-        customFrom: [
+        ctsource: [
           { required: true, message: '请输入客户来源', trigger: 'blur' }
         ],
         dot: [
@@ -217,11 +217,11 @@ export default {
   methods: {
     hanldeFormatNumberWithFocus (val) {
       const num = val.match(/^\d+(\.?\d{0,2})/)
-      this.ruleForm.customPrice = num && num[0]
+      this.ruleForm.ctprice = num && num[0]
     },
     handleFormatNumberAfterBlur () {
-      const price = this.ruleForm.customPrice
-      this.ruleForm.customPrice = price.endsWith('.') ? price.replace('.', '') : price
+      const price = this.ruleForm.ctprice
+      this.ruleForm.ctprice = price.endsWith('.') ? price.replace('.', '') : price
     },
     handleFormateToNumber (val) {
       const num = val.match(/^\d+(\.?\d{0,2})/)

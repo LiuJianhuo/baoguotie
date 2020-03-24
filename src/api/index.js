@@ -35,7 +35,7 @@ export function login (params) {
 export function register (params) {
   return request({
     method: 'get',
-    url: '',
+    url: 'admin/user/zuce',
     params
   })
 }
@@ -43,7 +43,7 @@ export function register (params) {
 export function getIdentifyingCode (params) {
   return request({
     method: 'get',
-    url: '',
+    url: 'api/code/getcode',
     params
   })
 }

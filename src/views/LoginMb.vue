@@ -33,6 +33,7 @@ export default {
       if (value && !(/^1\d{10}/.test(value))) {
         return callback(new Error('手机号不正确'))
       }
+      return callback()
     }
     return {
       form: {
@@ -64,11 +65,11 @@ export default {
             this.$message({ message: '登录成功', type: 'success', duration: 900 })
             localStorage.setItem('region', data.region)
             const time = setTimeout(() => {
-              this.$router.push({ name: 'index' })
+              this.$router.push({ name: 'indexMb' })
               clearTimeout(time)
             }, 250)
           }).catch(err => {
-            this.$message({ message: err.message, type: 'error', duration: 1220000 })
+            this.$message({ message: err.message, type: 'error', duration: 900 })
           })
         }
       })
@@ -76,16 +77,6 @@ export default {
   }
 }
 </script>
-<style lang="less">
-@media screen and (max-width: 800px) {
-  .el-message {
-    min-width: 300px;
-    .el-icon-error {
-      font-size: 15px;
-    }
-  }
-}
-</style>
 <style lang="less">
 .el-form-item {
   &.predend-icon-item {
@@ -158,6 +149,16 @@ export default {
     line-height: 22px;
     font-size: 12px;
     text-decoration: underline;
+  }
+}
+</style>
+<style lang="less">
+@media screen and (max-width: 800px) {
+  .el-message {
+    min-width: 300px;
+    .el-icon-error {
+      font-size: 15px;
+    }
   }
 }
 </style>
