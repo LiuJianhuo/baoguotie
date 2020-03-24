@@ -56,6 +56,14 @@ export function getUserList (params) {
     params
   })
 }
+// 获取执行用户列表 admin/user/zhixing
+export function getZXUserList (params) {
+  return request({
+    method: 'get',
+    url: 'admin/user/zhixing',
+    params
+  })
+}
 
 //  用户注册
 export function userRegister (params) {

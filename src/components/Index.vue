@@ -3,6 +3,7 @@
     <el-container>
       <el-header>
         <span class="span1">包裹贴监控系统</span>
+        <a class="logout-btn" @click="handleLogout">退出</a>
       </el-header>
       <el-container>
         <el-aside class="side-bar">
@@ -67,6 +68,10 @@ export default {
     this.yyyy()
   },
   methods: {
+    handleLogout () {
+      localStorage.removeItem('region')
+      this.$router.push({ name: 'login' })
+    },
     handleOpen (key, keyPath) {
       console.log(key, keyPath)
     },
@@ -165,6 +170,13 @@ button {
 </style>
 
 <style lang="less" scoped>
+.logout-btn {
+  font-size: 20px;
+  float: right;
+  margin-right: 20px;
+  cursor: pointer;
+  text-decoration: underline;
+}
 .jsdhifvibv {
   width: 100%;
   height: 50px;

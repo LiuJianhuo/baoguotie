@@ -121,7 +121,7 @@ export default {
               showClose: false,
               center: true
             }).then(() => {
-              this.$route({ name: 'loginMb' })
+              this.$router.push({ name: 'loginMb' })
             })
           }).catch(err => {
             this.$message({ message: err.message, type: 'error', duration: 900 })
@@ -239,7 +239,7 @@ export default {
     right: 0px;
     height: 22px;
     line-height: 22px;
-    font-size: 12px;
+    font-size: 14px;
     text-decoration: underline;
   }
 }

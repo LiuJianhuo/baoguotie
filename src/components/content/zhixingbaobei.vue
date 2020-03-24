@@ -286,8 +286,8 @@ export default {
       getPicList({
         findex,
         bindId: id
-      }).then(({ data }) => {
-        this.list[index].contractimg = data.data && data.data.map(({ url }) => {
+      }).then(data => {
+        this.list[index].contractimg = data && data.map(({ url }) => {
           return url
         })
         console.log(this.list[index].contractimg)
@@ -425,6 +425,7 @@ export default {
           userRegister({
             username: this.ruleForm.username,
             city: this.ruleForm.city,
+            province: this.ruleForm.province,
             dot: this.ruleForm.dot,
             dttime: this.ruleForm.dttime,
             phone: this.ruleForm.phone,
@@ -434,6 +435,7 @@ export default {
             userType: 3,
             id: this.userid
           }).then(data => {
+            this.outerVisible = false
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
             this.getList()
           }).catch(err => {

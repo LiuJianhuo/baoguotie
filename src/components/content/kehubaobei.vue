@@ -134,11 +134,11 @@ export default {
         phone: '',
         ctprice: '', // 客户价格
         ctsource: '', // 客户来源
+        startTime: '',
+        endTime: '',
         province: '',
         dot: '',
         number: '',
-        startTime: '',
-        endTime: '',
         cycle: ''
       },
       rules: {
@@ -241,13 +241,16 @@ export default {
             endTime: this.ruleForm.endTime,
             phone: this.ruleForm.phone,
             region: region,
+            ctprice: this.ruleForm.ctprice,
+            ctsource: this.ruleForm.ctsource,
             state: 0,
             userType: 2,
             id: this.userid
           }).then(data => {
-            this.$message({ message: '提交成功', type: 'success', duration: 900 })
+            this.outerVisible = false
             this.ruleForm = ''
             this.getList()
+            this.$message({ message: '提交成功', type: 'success', duration: 900 })
           })
         }
       })

@@ -59,17 +59,18 @@ export default {
       this.$refs.form.validate((valid) => {
         if (valid) {
           login({
-            username: this.form.username,
+            phone: this.form.phone,
             password: this.form.password
           }).then(data => {
             this.$message({ message: '登录成功', type: 'success', duration: 900 })
             localStorage.setItem('region', data.region)
+            localStorage.setItem('phone', this.form.phone)
             const time = setTimeout(() => {
               this.$router.push({ name: 'indexMb' })
               clearTimeout(time)
             }, 250)
-          }).catch(err => {
-            this.$message({ message: err.message, type: 'error', duration: 900 })
+          }).catch(() => {
+            this.$message({ message: '登录失败', type: 'error', duration: 900 })
           })
         }
       })
@@ -147,7 +148,7 @@ export default {
     right: 0px;
     height: 22px;
     line-height: 22px;
-    font-size: 12px;
+    font-size: 14px;
     text-decoration: underline;
   }
 }

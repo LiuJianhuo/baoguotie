@@ -65,6 +65,7 @@
                   class="avatar-uploader"
                   :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
                   :show-file-list="false"
+                  accept="image/*"
                   :on-success="handleUploadSuccess"
                   :on-error="handleUploadError"
                   :before-upload="handleUploadBefore">
@@ -78,7 +79,7 @@
             <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
           </el-form-item>
         </el-form>
-        <el-dialog
+        <!-- <el-dialog
           title=""
           :visible.sync="centerDialogVisible"
           width="50%"
@@ -87,7 +88,7 @@
           <span slot="footer" class="dialog-footer">
             <div class="beivbibvsifv" type="primary" @click="centerDialogVisible1">返 回</div>
           </span>
-        </el-dialog>
+        </el-dialog> -->
       </div>
     </el-dialog>
   </div>
@@ -170,6 +171,7 @@ export default {
       this.ruleForm.price = price.endsWith('.') ? price.replace('.', '') : price
     },
     handleSearch () {
+      this.getList()
     },
     handleRegionChange (regionName) {
       console.log(regionName)
@@ -192,6 +194,7 @@ export default {
       getUserList({
         userType: 1,
         region: region,
+        userName: this.searchVal,
         page: 1,
         row: 10
       }).then(data => {
@@ -216,9 +219,10 @@ export default {
             id: this.userid,
             state: 0
           }).then(data => {
-            this.centerDialogVisible = true
             this.ruleForm = ''
             this.getList()
+            this.xinzengdailibaobei = false
+            this.$message({ message: '提交成功', type: 'success', duration: 900 })
           }).catch(err => {
             console.log('注册代理报备失败:' + err.message)
           })

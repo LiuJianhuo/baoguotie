@@ -175,6 +175,10 @@ export default {
         price: '',
         contract: '',
         province: '',
+        ctprice: '', // 客户价格
+        ctsource: '', // 客户来源
+        startTime: '',
+        endTime: '',
         phone: ''
       },
       loading: false,
@@ -287,6 +291,10 @@ export default {
             contract: this.ruleForm.contract,
             phone: this.ruleForm.phone,
             region: region,
+            ctprice: this.ruleForm.ctprice, // 客户价格
+            ctsource: this.ruleForm.ctsource, // 客户来源
+            startTime: this.ruleForm.startTime,
+            endTime: this.ruleForm.endTime,
             state: 0,
             userType: 4,
             id: this.userid
