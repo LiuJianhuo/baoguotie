@@ -2,7 +2,7 @@
   <div class="index mb-mode">
     <nav class="nav">
       <img class="user-pic" src="@/assets/user.png" alt="">
-      <span class="user-name">{{item.username}}</span>
+      <span class="user-name">{{form.phone}}</span>
       <button class="btn" @click="handleLogout">退出</button>
     </nav>
     <div class="img-wrap">
@@ -84,57 +84,59 @@
           </el-select>
         </div>
       </div>
-      <div class="box-item clearfix">
-        <div class="control-prepend">
-          <img class="icon" src="@/assets/number-icon.png" alt="">
-          <label class="label" for="">投放数量：</label>
+      <div v-show="item.username">
+        <div class="box-item clearfix">
+          <div class="control-prepend">
+            <img class="icon" src="@/assets/number-icon.png" alt="">
+            <label class="label" for="">投放数量：</label>
+          </div>
+          <div class="control value">
+            {{item.number}}
+          </div>
         </div>
-        <div class="control value">
-          {{item.number}}
+        <div class="box-item clearfix">
+          <div class="control-prepend">
+            <img class="icon" src="@/assets/print-icon.png" alt="">
+            <label class="label width-auto" for="">印刷物流证明：</label>
+          </div>
+        </div>
+        <div class="pic-display">
+          <ul class="list clearfix" @click="handleShowPicGallary([item.headpic, item.headpic1])">
+            <li class="list__item">
+              <img class="pic" :src="item.headpic">
+            </li>
+            <li class="list__item">
+              <img class="pic" :src="item.headpic1">
+            </li>
+          </ul>
+        </div>
+        <div class="box-item clearfix">
+          <div class="control-prepend">
+            <img class="icon" src="@/assets/pic-icon.png" alt="">
+            <label class="label width-auto" for="">图片证明：</label>
+          </div>
+        </div>
+        <div class="pic-display">
+          <ul class="list scroll clearfix" @click="handleShowPicGallary(contractimgList)">
+            <li class="list__item" v-for="(item, index) in contractimgList" :key="index">
+              <img class="pic" :src="item">
+            </li>
+          </ul>
+          <div class="side-bar-more">
+            <img src="@/assets/more1.png" alt="">
+          </div>
+        </div>
+        <div class="box-item clearfix">
+          <div class="control-prepend">
+            <img class="icon" src="@/assets/video-icon.png" alt="">
+            <label class="label width-auto" for="">视频证明：</label>
+          </div>
+        </div>
+        <div>
+          <video class="video" :src="item.executeimg" controls></video>
         </div>
       </div>
-      <div class="box-item clearfix">
-        <div class="control-prepend">
-          <img class="icon" src="@/assets/print-icon.png" alt="">
-          <label class="label width-auto" for="">印刷物流证明：</label>
-        </div>
       </div>
-      <div class="pic-display">
-        <ul class="list clearfix" @click="handleShowPicGallary([item.headpic, item.headpic1])">
-          <li class="list__item">
-            <img class="pic" :src="item.headpic">
-          </li>
-          <li class="list__item">
-            <img class="pic" :src="item.headpic1">
-          </li>
-        </ul>
-      </div>
-      <div class="box-item clearfix">
-        <div class="control-prepend">
-          <img class="icon" src="@/assets/pic-icon.png" alt="">
-          <label class="label width-auto" for="">图片证明：</label>
-        </div>
-      </div>
-      <div class="pic-display">
-        <ul class="list scroll clearfix" @click="handleShowPicGallary(contractimgList)">
-          <li class="list__item" v-for="(item, index) in contractimgList" :key="index">
-            <img class="pic" :src="item">
-          </li>
-        </ul>
-        <div class="side-bar-more">
-          <img src="@/assets/more1.png" alt="">
-        </div>
-      </div>
-      <div class="box-item clearfix">
-        <div class="control-prepend">
-          <img class="icon" src="@/assets/video-icon.png" alt="">
-          <label class="label width-auto" for="">视频证明：</label>
-        </div>
-      </div>
-      <div>
-        <video class="video" :src="item.executeimg" controls></video>
-      </div>
-    </div>
     <div class="pic-gallary" :class="showPicGallary ? 'show' : ''" >
       <van-swipe class="gallary-swipe" indicator-color="#FF2746" :loop="false">
         <van-swipe-item v-for="(item, index) in picGallaryList" :key="index">
@@ -310,30 +312,41 @@ export default {
       const provinceSet = new Set()
       const netdotSet = new Set()
       const dttimeSet = new Set()
-      this.cityMapDot = {}
-      this.provinceMapDot = {}
-      this.dttimeMapDot = {}
-      this.dotnetMapItem = {}
+      this.cityMapDot = {} // 城市映射网点
+      this.provinceMapDot = {} // 城市映射网点
+      this.cityMapDttime = {} // 城市映射日期
+      this.provinceMapDttime = {} // 城市映射日期
+      this.dttimeMapDot = {} // 日期映射网点
+      this.dotnetMapItem = {} // 网点印刷条目
       list.forEach((item) => {
         const { city, province, dot, dttime } = item
         if (city) {
           citySet.add(city)
-          this.cityMapDot[city] = !this.cityMapDot[city] ? [dot] : this.cityMapDot[city].push(dot)
-          console.log(this.cityMapDot)
+          typeof this.cityMapDot[city] !== 'object' ? (this.cityMapDot[city] = [dot]) : this.cityMapDot[city].push(dot)
+          typeof this.cityMapDttime[city] !== 'object' ? (this.cityMapDttime[city] = [dttime]) : this.cityMapDttime[city].push(dttime)
+          // console.log(this.cityMapDot)
+          console.log('====')
+          console.log(this.cityMapDttime)
         }
         if (province) {
           provinceSet.add(province)
-          this.provinceMapDot[province] = !this.provinceMapDot[province] ? [dot] : this.provinceMapDot[province].push(dot)
-          console.log(this.provinceMapDot)
+          typeof this.provinceMapDot[province] !== 'object' ? (this.provinceMapDot[province] = [dot]) : this.provinceMapDot[province].push(dot)
+          typeof this.provinceMapDttime[province] !== 'object' ? (this.provinceMapDttime[province] = [dttime]) : this.provinceMapDttime[province].push(dttime)
+          // console.log(this.provinceMapDot)
         }
         if (dttime) {
           dttimeSet.add(dttime)
           console.log(dttime)
-          this.dttimeMapDot[dttime] = !this.dttimeMapDot[dttime] ? [dot] : this.dttimeMapDot[dttime].push(dot)
+          console.log(typeof this.dttimeMapDot[dttime] !== 'object')
+          console.log(dot)
+          console.log(this.dttimeMapDot[dttime])
+          typeof this.dttimeMapDot[dttime] !== 'object' ? (this.dttimeMapDot[dttime] = [dot]) : this.dttimeMapDot[dttime].push(dot)
+          console.log(this.dttimeMapDot)
         }
         if (dot) {
           netdotSet.add(dot)
           this.dotnetMapItem[dot] = item
+          // console.log(this.dotnetMapItem)
         }
       })
       this.allCitys = [...citySet]
@@ -342,10 +355,16 @@ export default {
       this.allDttime = [...dttimeSet]
       this.dttimeList = this.allDttime
     },
+    clearItem () {
+      this.item = {}
+      this.contractimgList = []
+    },
     // 省份改变
     handleProvinceChange (val) {
       this.form.city = null
       this.form.dot = null
+      this.form.dttime = null
+      this.clearItem()
       // this.cityList = getCityListFromProvinceName(val)
       const tempSet = new Set(getCityListFromProvinceName(val))
       // 筛选出城市和网点
@@ -353,17 +372,22 @@ export default {
       console.log('change')
       console.log(this.provinceMapDot[val])
       this.netdotList = this.provinceMapDot[val]
+      this.dttimeList = [...new Set(this.provinceMapDttime[val])]
     },
     handleDttimeChange (val) {
       this.form.dot = ''
-      this.netDotList = this.dttimeMapDot[val]
+      this.clearItem()
+      this.netdotList = this.dttimeMapDot[val]
     },
     // 城市改变
     handleCityChange (val) {
       console.log(this.form.dot)
       this.form.dot = ''
+      this.form.dttime = ''
+      this.clearItem()
       // 筛选出网点
       this.netdotList = this.cityMapDot[val]
+      this.dttimeList = [...new Set(this.cityMapDttime[val])]
     },
     // 网点改变
     handleNetdotChange (val) {

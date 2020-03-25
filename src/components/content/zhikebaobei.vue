@@ -1,8 +1,9 @@
 <template>
   <div class="kehu">
     <div class="top">
-      <input class="searchVal" v-model="input" placeholder="请输入需要搜索的内容">
-      <button class="btn-1">搜索</button>
+      <input class="searchVal" v-model="searchForm.username" placeholder="请输入需要搜索的内容">
+      <button class="btn-1" @click="handleSearch">搜索</button>
+      <button class="btn reset-btn" @click="handleResetSearch">重置</button>
       <button class="btn-2" @click="outerVisible=true; id()">新增直客报备</button>
     </div>
     <div class="center">
@@ -28,7 +29,7 @@
             <div>{{item.ctsource}}</div>
             <div>{{item.province}} {{item.city}}</div>
             <div>{{item.dot}}</div>
-            <div>{{item.startTime}}{{item.endTime && '-' + item.endTime}}</div>
+            <div><div style="line-height: 20px;margin-top: 13px;border: none;">{{item.startTime}}到{{item.endTime}}</div></div>
             <div>{{item.number}}</div>
             <!-- <div>{{item.price}}</div> -->
             <!-- <div><img :src="item.contractimg" alt=""></div> -->
@@ -43,6 +44,15 @@
           </li>
         </ul>
       </div>
+      <el-pagination
+        class="pagination"
+        @current-change="handlePageNumChange"
+        :current-page="searchForm.page"
+        :page-size="searchForm.row"
+        background
+        layout="total, prev, pager, next, jumper"
+        :total="totalPages">
+      </el-pagination>
     </div>
     <el-dialog :visible.sync="outerVisible">
       <div class="kehu-1">
@@ -74,7 +84,7 @@
             <el-input v-model="ruleForm.city" placeholder="投放城市"></el-input>
           </el-form-item> -->
           <div class="jfbdv"><span class="c-red">*</span>投放城市</div>
-          <el-form-item prop="province">
+          <el-form-item prop="city">
             <el-select v-model="ruleForm.region" placeholder="地区  （必 填）" class="aj6" @change="handleRegionChange">
               <el-option v-for="(item, index) in regionList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
@@ -88,12 +98,12 @@
           <el-form-item label="投放网点" prop="dot">
             <el-input v-model="ruleForm.dot" placeholder="请输入投放网点"></el-input>
           </el-form-item>
-           <el-form-item label="投放周期">
-              <el-col :span="10">
-                <el-date-picker type="date" placeholder="选择开始日期" v-model="ruleForm.startTime" style="width: 80%;"></el-date-picker>
+           <el-form-item label="投放周期" prop="lanchCycle">
+              <el-col :span="9">
+                <el-date-picker type="date" placeholder="选择开始日期" v-model="ruleForm.startTime" style="width: 83%;" format="yyyy-MM-dd" value-format="yyyy-MM-dd"></el-date-picker>
               </el-col>
-              <el-col :span="10">
-                <el-date-picker type="date" placeholder="选择结束日期" v-model="ruleForm.endTime" style="width: 80%;"></el-date-picker>
+              <el-col :span="9">
+                <el-date-picker type="date" placeholder="选择结束日期" v-model="ruleForm.endTime" style="width: 83%;" format="yyyy-MM-dd" value-format="yyyy-MM-dd"></el-date-picker>
               </el-col>
             </el-form-item>
           <el-form-item label="投放数量" prop="number">
@@ -102,7 +112,8 @@
           <!-- <el-form-item label="合约金额" prop="price">
             <el-input v-model="ruleForm.price" placeholder="请输入合约金额" @input="handleFormateToNumber" @blur="e => {ruleForm.price = ruleForm.price.endsWith('.') ? ruleForm.price.replace('.', '') : ruleForm.price}"></el-input>
           </el-form-item> -->
-            <div style="text-align:left;margin-bottom: 10px"><span class="c-red">*</span>合同影印件</div>
+          <div style="text-align:left;margin-bottom: 10px"><span class="c-red">*</span>合同影印件</div>
+          <el-form-item prop="imageUrl1">
             <div class="clearfix">
               <el-upload
                 class="avatar-uploader"
@@ -111,11 +122,12 @@
                 :on-error="handleUploadError"
                 :on-success="handleAvatarSuccess1"
                 :before-upload="beforeAvatarUpload">
-                <img v-if="imageUrl1" :src="imageUrl1" class="avatar">
+                <img v-if="ruleForm.imageUrl1" :src="ruleForm.imageUrl1" class="avatar">
                 <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 <div class="loading" v-loading="loading" element-loading-text="拼命上传中"></div>
               </el-upload>
             </div>
+          </el-form-item>
             <!-- <el-upload
               class="avatar-uploader"
               :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
@@ -154,13 +166,26 @@ export default {
         }
       }
     }
+    // 检查投放周期 结束要不能早于开始， 结束和开始必填
+    const checkLanchCycle = (rule, value, callback) => {
+      const { startTime, endTime } = this.ruleForm
+      if (startTime && endTime) {
+        callback(Date.parse(startTime) > Date.parse(endTime) ? new Error('投放结束日期不能早于开始日期') : '')
+      }
+      if (!startTime && !endTime) {
+        return callback(new Error('请选择投放周期'))
+      }
+      if (!startTime) {
+        return callback(new Error('请选择投放开始日期'))
+      }
+      return callback(new Error('请选择投放结束日期'))
+    }
     return {
       regionList: getRegionList(),
       provinceList: null,
       cityList: null,
       searchVal: '',
       actions,
-      imageUrl1: '',
       list: '',
       input: '',
       userid: '',
@@ -169,6 +194,7 @@ export default {
       centerDialogVisible: false,
       outerVisible: false,
       ruleForm: {
+        imageUrl1: '',
         username: '',
         city: '',
         dot: '',
@@ -182,12 +208,27 @@ export default {
         phone: ''
       },
       loading: false,
+      searchForm: {
+        userType: 4,
+        username: '',
+        region: localStorage.getItem('region'),
+        row: 10,
+        page: 1
+      },
+      totalPages: 0, // 总页数
+      page: {
+        row: 10,
+        page: 1
+      },
       rules: {
         username: [
           { required: true, message: '请输入客户名称', trigger: 'blur' }
         ],
         city: [
-          { required: true, message: '请输入投放城市', trigger: 'blur' }
+          { required: true, message: '请选择投放城市', trigger: 'blur' }
+        ],
+        imageUrl1: [
+          { required: true, message: '请上传合同影印件', trigger: 'blur' }
         ],
         ctprice: [
           { required: true, message: '请输入客户价格', trigger: 'blur' }
@@ -210,6 +251,9 @@ export default {
         phone: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
           { validator: checkPhone, trigger: 'blur' }
+        ],
+        lanchCycle: [
+          { required: true, validator: checkLanchCycle }
         ]
       }
     }
@@ -219,6 +263,20 @@ export default {
     this.getList()
   },
   methods: {
+    // 页码改变
+    handlePageNumChange (val) {
+      this.searchForm.page = val
+      this.handleSearch()
+    },
+    // 搜索
+    handleSearch () {
+      this.getList()
+    },
+    // 重置搜索
+    handleResetSearch () {
+      this.searchForm = Object.assign({}, this.searchForm, this.page, { username: '' })
+      this.getList()
+    },
     hanldeFormatNumberWithFocus (val) {
       const num = val.match(/^\d+(\.?\d{0,2})/)
       this.ruleForm.ctprice = num && num[0]
@@ -253,16 +311,11 @@ export default {
       console.log(getProvinceListFromRegionName(regionName))
     },
     getList () {
-      const region = localStorage.getItem('region')
-      getUserList({
-        userType: 4,
-        region: region,
-        page: 1,
-        row: 10
-      }).then(data => {
+      getUserList(this.searchForm).then(data => {
         console.log('这是直客报备数据')
         console.log(data)
         this.list = data.list
+        this.totalPages = data.total
         console.log(this.list)
       }).catch(err => {
         console.log('执客报备用户列表：' + err.message)
@@ -300,13 +353,22 @@ export default {
             id: this.userid
           }).then(data => {
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
-            this.ruleForm = ''
+            this.outerVisible = false
+            this.ruleForm = this.resetRuleForm()
             this.getList()
           }).catch(err => {
             console.log('执客报备用户注册：' + err.message)
           })
         }
       })
+    },
+    // 重置所填写的信息
+    resetRuleForm () {
+      const ruleForm = Object.assign({}, this.ruleForm)
+      for (const key in ruleForm) {
+        ruleForm[key] = null
+      }
+      return ruleForm
     },
     resetForm (formName) {
       this.$refs[formName].resetFields()
@@ -325,7 +387,7 @@ export default {
       })
     },
     handleAvatarSuccess1 (res, file) {
-      this.imageUrl1 = URL.createObjectURL(file.raw)
+      this.ruleForm.imageUrl1 = URL.createObjectURL(file.raw)
       this.loading = false
     },
     // 处理省份改变
@@ -381,6 +443,10 @@ export default {
     height: 130px;
     line-height: 130px;
     text-align: center;
+  }
+  .avatar {
+    width: 100%;
+    height: 100%;
   }
 .kehu {
   padding: 70px 10px;

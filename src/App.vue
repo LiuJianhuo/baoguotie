@@ -116,6 +116,25 @@ button {
   // width: 100%;
   overflow: hidden;
 }
+// 分页样式
+.pagination {
+  margin-top: 15px;
+  text-align: right;
+}
+.reset-btn {
+  width: 80px;
+  height: 53px;
+  border: 1px solid #cbcccd;
+  border-radius: 10px;
+  text-align: center;
+  line-height: 51px;
+  font-family: PingFangSC-Regular, PingFang SC;
+  font-size: 18px;
+  color: #333333;
+  background-color: #ffffff;
+  margin-right: 20px;
+  cursor: pointer;
+}
 </style>
 <style lang="less" scoped>
 body {

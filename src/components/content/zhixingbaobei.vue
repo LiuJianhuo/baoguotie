@@ -1,8 +1,9 @@
 <template>
   <div class="zhixing">
     <div class="top">
-      <input class="input" v-model="searchVal" placeholder="请输入需要搜索的内容">
-      <button class="btn-1">搜索</button>
+      <input class="input" v-model="searchForm.username" placeholder="请输入需要搜索的内容">
+      <button class="btn-1" @click="handleSearch">搜索</button>
+      <button class="btn reset-btn" @click="handleResetSearch">重置</button>
       <button class="btn-2" @click="outerVisible=true; id()">新增执行报备</button>
     </div>
     <div class="center">
@@ -57,6 +58,15 @@
           </li>
         </ul>
       </div>
+       <el-pagination
+        class="pagination"
+        @current-change="handlePageNumChange"
+        :current-page="searchForm.page"
+        :page-size="searchForm.row"
+        background
+        layout="total, prev, pager, next, jumper"
+        :total="totalPages">
+      </el-pagination>
     </div>
     <el-dialog :visible.sync="outerVisible">
       <div class="zhixing-1">
@@ -93,40 +103,46 @@
           <el-form-item label="投放数量" prop="number">
             <el-input v-model="ruleForm.number" placeholder="请输入投放数量"></el-input>
           </el-form-item>
+          <!-- <el-form-item label="投放数量" prop="number">
+            <el-input v-model="ruleForm.number" placeholder="请输入投放数量"></el-input>
+          </el-form-item> -->
           <div class="dhv clearfix">
-            <div class="hjdiv clearfix">印刷物流证明</div>
+            <div class="hjdiv clearfix"><span class="c-red">*</span>印刷物流证明</div>
           </div>
-          <div class="hbdfbvdf">
-            <el-upload
-              class="avatar-uploader"
-              :action="actions.uploadHeadPotrait + '&bindId=' + userid"
-              :show-file-list="false"
-              accept="image/*"
-              :on-error="err => handleUplaodError('print', file)"
-              :on-success="(res, file) => handleUploadSuccess('print', file, res)"
-              :before-upload="(file) => handleUploadBefore('print', file)">
-              <img v-if="uploadUrls.print" :src="uploadUrls.print" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon append-word yinshua"></i>
-              <div class="loading" v-loading="loading.print" element-loading-text="拼命上传中"></div>
-            </el-upload>
-            <el-upload
-              class="avatar-uploader wuliu"
-              :action="actions.uploadHeadPotrait1 + '&bindId=' + userid"
-              :show-file-list="false"
-              accept="image/*"
-              :on-success="(res, file) => handleUploadSuccess('logistics', file, res)"
-              :on-error="err => handleUplaodError('logistics', file)"
-              :before-upload="file => handleUploadBefore('logistics', file)">
-              <img v-if="uploadUrls.logistics" :src="uploadUrls.logistics" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon append-word wuliu"></i>
-              <div class="loading" v-loading="loading.logistics" element-loading-text="拼命上传中"></div>
-            </el-upload>
-          </div>
+          <el-form-item prop="printLogisticsPics">
+            <div class="hbdfbvdf">
+              <el-upload
+                class="avatar-uploader"
+                :action="actions.uploadHeadPotrait + '&bindId=' + userid"
+                :show-file-list="false"
+                accept="image/*"
+                :on-error="err => handleUplaodError('print', file)"
+                :on-success="(res, file) => handleUploadSuccess('print', file, res)"
+                :before-upload="(file) => handleUploadBefore('print', file)">
+                <img v-if="uploadUrls.print" :src="uploadUrls.print" class="avatar">
+                <i v-else class="el-icon-plus avatar-uploader-icon append-word yinshua"></i>
+                <div class="loading" v-loading="loading.print" element-loading-text="拼命上传中"></div>
+              </el-upload>
+              <el-upload
+                class="avatar-uploader wuliu"
+                :action="actions.uploadHeadPotrait1 + '&bindId=' + userid"
+                :show-file-list="false"
+                accept="image/*"
+                :on-success="(res, file) => handleUploadSuccess('logistics', file, res)"
+                :on-error="err => handleUplaodError('logistics', file)"
+                :before-upload="file => handleUploadBefore('logistics', file)">
+                <img v-if="uploadUrls.logistics" :src="uploadUrls.logistics" class="avatar">
+                <i v-else class="el-icon-plus avatar-uploader-icon append-word wuliu"></i>
+                <div class="loading" v-loading="loading.logistics" element-loading-text="拼命上传中"></div>
+              </el-upload>
+            </div>
+          </el-form-item>
           <div class="sdivb clearfix">投放证明</div>
-          <div class="drvdfvb clearfix">1、图片证明</div>
+          <div class="drvdfvb clearfix"><span class="c-red">*</span>1、图片证明<span class="c-red" style="font-size:12px;margin-left:13px">(正面特写1-3张;正在粘贴3-10张;堆积排列3-10张)</span></div>
           <div class="hbdfbvdf action-box">
             <!-- 1-3 -->
             <el-upload
+              ref="certificater1"
               :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
               :on-success="(res, file) => handleUploadSuccess('certificater1', file, res)"
               :on-remove="handleRemove"
@@ -142,6 +158,7 @@
           <div class="hbdfbvdf action-box">
             <!-- 3-10 -->
             <el-upload
+              ref="certificater2"
               :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
               :on-success="(res, file) => handleUploadSuccess('certificater2', file, res)"
               :on-remove="handleRemove"
@@ -157,6 +174,7 @@
           <div class="hbdfbvdf action-box">
             <!-- 3-10 -->
             <el-upload
+              ref="certificater3"
               :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
               :on-success="(res, file) => handleUploadSuccess('certificater3', file, res)"
               :on-remove="handleRemove"
@@ -169,22 +187,24 @@
               <!-- <el-button class="" size="small" type="primary">点击上传</el-button> -->
             </el-upload>
           </div>
-          <div class="drvdfvb clearfix">2、视频证明</div>
-          <div class="hbdfbvdf">
-            <el-upload
-              class="avatar-uploader"
-              accept="video/mp4,audio/mp4"
-              :action="actions.uploadVideo + '&bindId=' + userid"
-              :show-file-list="false"
-              :on-success="(res, file) => handleUploadSuccess('video', file, res)"
-              :on-error="err => handleUplaodError('video', file)"
-              :before-upload="file => handleUploadBefore('video', file)">
-              <!-- <img v-if="imageUrl3" :src="imageUrl3" class="avatar"> -->
-              <video v-if="uploadUrls.video" :src="uploadUrls.video" class="video" controls="controls"></video>
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-              <div class="loading" v-loading="loading.video" element-loading-text="拼命上传中"></div>
-            </el-upload>
-          </div>
+          <div class="drvdfvb clearfix"><span class="c-red">*</span>2、视频证明</div>
+          <el-form-item prop="video">
+            <div class="hbdfbvdf">
+              <el-upload
+                class="avatar-uploader"
+                accept="video/mp4,audio/mp4"
+                :action="actions.uploadVideo + '&bindId=' + userid"
+                :show-file-list="false"
+                :on-success="(res, file) => handleUploadSuccess('video', file, res)"
+                :on-error="err => handleUplaodError('video', file)"
+                :before-upload="file => handleUploadBefore('video', file)">
+                <!-- <img v-if="imageUrl3" :src="imageUrl3" class="avatar"> -->
+                <video v-if="uploadUrls.video" :src="uploadUrls.video" class="video" controls="controls"></video>
+                <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                <div class="loading" v-loading="loading.video" element-loading-text="拼命上传中"></div>
+              </el-upload>
+            </div>
+          </el-form-item>
           <el-form-item>
             <el-button class="submit-btn" type="primary" @click="submitForm('ruleForm')">提交</el-button>
           </el-form-item>
@@ -216,6 +236,21 @@ export default {
         }
       }
     }
+    const checkVideo = (rule, value, callback) => {
+      if (this.uploadUrls.video) {
+        return callback()
+      }
+      return callback(new Error('请上传视频证明'))
+    }
+    const checkPrintLogisticsPics = (rule, value, callback) => {
+      const { print, logistics } = this.uploadUrls
+      if (print && logistics) {
+        return callback()
+      }
+      if (!print && !logistics) return callback(new Error('请上传印刷物流证明'))
+      if (!print) return callback(new Error('请上传印刷证明'))
+      return callback(new Error('请上传物流证明'))
+    }
     return {
       regionList: getRegionList(),
       searchVal: '',
@@ -243,6 +278,18 @@ export default {
         print: false,
         video: false
       },
+      searchForm: {
+        userType: 3,
+        username: '',
+        region: localStorage.getItem('region'),
+        row: 10,
+        page: 1
+      },
+      totalPages: 0, // 总页数
+      page: {
+        row: 10,
+        page: 1
+      },
       ruleForm: {
         username: '',
         city: '',
@@ -269,6 +316,12 @@ export default {
         dot: [
           { required: true, message: '请输入投放网点', trigger: 'blur' }
         ],
+        video: [
+          { required: true, validator: checkVideo, trigger: 'blur' }
+        ],
+        printLogisticsPics: [
+          { required: true, validator: checkPrintLogisticsPics, trigger: 'blur' }
+        ],
         phone: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
           { validator: checkPhone, trigger: 'blur' }
@@ -280,6 +333,20 @@ export default {
     this.getList()
   },
   methods: {
+    // 页码改变
+    handlePageNumChange (val) {
+      this.searchForm.page = val
+      this.handleSearch()
+    },
+    // 搜索
+    handleSearch () {
+      this.getList()
+    },
+    // 重置搜索
+    handleResetSearch () {
+      this.searchForm = Object.assign({}, this.searchForm, this.page, { username: '' })
+      this.getList()
+    },
     handleGetPicList (findex, index, { id, contractimg }) {
       if (!contractimg) return
       if (typeof contractimg === 'object') return
@@ -304,16 +371,11 @@ export default {
       console.log(getProvinceListFromRegionName(regionName))
     },
     getList () {
-      const region = localStorage.getItem('region')
-      getUserList({
-        userType: 3,
-        region: region,
-        page: 1,
-        row: 10
-      }).then(data => {
+      getUserList(this.searchForm).then(data => {
         console.log('这是执行报备数据')
         console.log(data)
         this.list = data.list
+        this.totalPages = data.total
         console.log(this.list)
       }).catch(err => {
         console.log('执行报备列表失败：' + err.message)
@@ -395,29 +457,29 @@ export default {
       })
     },
     submitForm (formName) {
-      // this.$message({ message: '提交成功', type: 'success', duration: 900 })
-      // 印刷证明 物流证明必须上传
-      //  logistics: '', // 印刷物流
-      //   print: '', // 印刷物流
-      //   video: '',
-      //   certificater1: '',
-      //   certificater2: '',
-      //   certificater3: ''
-      const { logistics, print } = this.uploadUrls
-      if (!logistics) {
-        this.$notify({
-          title: '请上传印刷物流',
+      const { certificater3, certificater1, certificater2 } = this.uploadUrls
+      if (certificater1.length < 1) {
+        this.$message({
+          message: '请先上传投放证明正面特写（1-3张）',
           type: 'error'
         })
         return
       }
-      if (!print) {
-        this.$notify({
-          title: '请上传印刷物流',
+      if (certificater2.length < 3) {
+        this.$message({
+          message: '请上传投放证明正在粘贴（3-10张）',
           type: 'error'
         })
         return
       }
+      if (certificater3.length < 3) {
+        this.$message({
+          message: '请上传投放证明堆积排列（3-10张）',
+          type: 'error'
+        })
+        return
+      }
+
       this.$refs[formName].validate((valid) => {
         const region = localStorage.getItem('region')
         if (valid) {
@@ -438,6 +500,7 @@ export default {
             this.outerVisible = false
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
             this.getList()
+            this.resetRuleForm()
           }).catch(err => {
             console.log('执行报备注册失败：' + err.message)
           })
@@ -446,6 +509,26 @@ export default {
           return false
         }
       })
+    },
+    // 重置所填写的信息
+    resetRuleForm () {
+      const ruleForm = Object.assign({}, this.ruleForm)
+      for (const key in ruleForm) {
+        ruleForm[key] = null
+      }
+      this.ruleForm = ruleForm
+      const uploadUrls = {
+        logistics: '', // 印刷物流
+        print: '', // 印刷物流
+        video: '',
+        certificater1: [],
+        certificater2: [],
+        certificater3: []
+      }
+      this.uploadUrls = uploadUrls
+      this.$refs.certificater1.clearFiles()
+      this.$refs.certificater2.clearFiles()
+      this.$refs.certificater3.clearFiles()
     },
     resetForm (formName) {
       this.$refs[formName].resetFields()

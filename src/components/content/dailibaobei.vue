@@ -1,8 +1,9 @@
 <template>
   <div class="daili">
     <div class="top">
-      <input class="input" v-model="searchVal" placeholder="请输入需要搜索的内容">
+      <input class="input" v-model="searchForm.username" placeholder="请输入需要搜索的内容">
       <button class="btn-1" @click="handleSearch">搜索</button>
+      <button class="btn reset-btn" @click="handleResetSearch">重置</button>
       <button class="btn-2" @click="xinzengdailibaobei=true; id()">新增代理报备</button>
     </div>
     <div class="center">
@@ -32,6 +33,15 @@
           </li>
         </ul>
       </div>
+      <el-pagination
+        class="pagination"
+        @current-change="handlePageNumChange"
+        :current-page="searchForm.page"
+        :page-size="searchForm.row"
+        background
+        layout="total, prev, pager, next, jumper"
+        :total="totalPages">
+      </el-pagination>
     </div>
     <el-dialog :visible.sync="xinzengdailibaobei">
       <div class="daili-1">
@@ -137,6 +147,18 @@ export default {
         province: '',
         phone: ''
       },
+      searchForm: {
+        userType: 1,
+        username: '',
+        region: localStorage.getItem('region'),
+        row: 10,
+        page: 1
+      },
+      totalPages: 0, // 总页数
+      page: {
+        row: 10,
+        page: 1
+      },
       rules: {
         username: [
           { required: true, message: '请输入代理公司名称', trigger: 'blur' }
@@ -162,6 +184,11 @@ export default {
     this.getList()
   },
   methods: {
+    // 重置搜索
+    handleResetSearch () {
+      this.searchForm = Object.assign({}, this.searchForm, this.page, { username: '' })
+      this.getList()
+    },
     hanldeFormatNumberWithInput (val) {
       const num = val.match(/^\d+(\.?\d{0,2})/)
       this.ruleForm.price = num && num[0]
@@ -169,6 +196,11 @@ export default {
     handleFormatNumberAfterBlur () {
       const price = this.ruleForm.price
       this.ruleForm.price = price.endsWith('.') ? price.replace('.', '') : price
+    },
+    // 页码改变
+    handlePageNumChange (val) {
+      this.searchForm.page = val
+      this.handleSearch()
     },
     handleSearch () {
       this.getList()
@@ -190,14 +222,8 @@ export default {
       })
     },
     getList () {
-      const region = localStorage.getItem('region')
-      getUserList({
-        userType: 1,
-        region: region,
-        userName: this.searchVal,
-        page: 1,
-        row: 10
-      }).then(data => {
+      getUserList(this.searchForm).then(data => {
+        this.totalPages = data.total
         this.list = data.list
       }).catch(err => {
         console.log('获取代理报备列表失败:' + err.message)
@@ -219,15 +245,23 @@ export default {
             id: this.userid,
             state: 0
           }).then(data => {
-            this.ruleForm = ''
             this.getList()
             this.xinzengdailibaobei = false
+            this.resetRuleForm()
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
           }).catch(err => {
             console.log('注册代理报备失败:' + err.message)
           })
         }
       })
+    },
+    // 重置所填写的信息
+    resetRuleForm () {
+      const ruleForm = Object.assign({}, this.ruleForm)
+      for (const key in ruleForm) {
+        ruleForm[key] = null
+      }
+      this.ruleForm = ruleForm
     },
     resetForm (formName) {
       this.$refs[formName].resetFields()
@@ -362,7 +396,6 @@ export default {
 </style>
 
 <style lang="less" scoped>
-
   .avatar-uploader-icon {
     font-size: 20px;
     color: #8c939d;
