@@ -8,6 +8,7 @@
     </div>
     <div class="center">
       <div class="center-1">
+        <div>报备公司</div>
         <div>客户名称</div>
         <div>联系方式</div>
         <div>投放城市</div>
@@ -22,6 +23,7 @@
       <div class="center-2">
         <ul v-for="(item, index) in list" :key="item.id">
           <li>
+            <div>{{item.region === 'null' ? '总部' : (item.region || '--')}}</div>
             <div>{{item.username}}</div>
             <div>{{item.phone || '--'}}</div>
             <div>{{item.province}} {{item.city}}</div>
@@ -101,7 +103,7 @@
             </el-form-item>
           </div>
           <el-form-item label="投放数量" prop="number">
-            <el-input v-model="ruleForm.number" placeholder="请输入投放数量"></el-input>
+            <el-input v-model="ruleForm.number" v-pure-number placeholder="请输入投放数量"></el-input>
           </el-form-item>
           <!-- <el-form-item label="投放数量" prop="number">
             <el-input v-model="ruleForm.number" placeholder="请输入投放数量"></el-input>
@@ -150,7 +152,7 @@
               accept="image/*"
               :limit="3"
               list-type="picture-card"
-              :before-upload="handleUploadCerticater">
+              :before-upload="handleUploadCerticaterBefore">
               <i class="el-icon-plus append-word front-pic" ></i>
               <!-- <el-button class="" size="small" type="primary">点击上传</el-button> -->
             </el-upload>
@@ -166,7 +168,7 @@
               accept="image/*"
               :limit="10"
               list-type="picture-card"
-              :before-upload="handleUploadCerticater">
+              :before-upload="handleUploadCerticaterBefore">
               <i class="el-icon-plus append-word copy-paste"></i>
               <!-- <el-button class="" size="small" type="primary">点击上传</el-button> -->
             </el-upload>
@@ -182,7 +184,7 @@
               accept="image/*"
               :limit="10"
               list-type="picture-card"
-              :before-upload="handleUploadCerticater">
+              :before-upload="handleUploadCerticaterBefore">
               <i class="el-icon-plus append-word order"></i>
               <!-- <el-button class="" size="small" type="primary">点击上传</el-button> -->
             </el-upload>
@@ -383,6 +385,14 @@ export default {
     },
     // 上传前
     handleUploadBefore (type, file) {
+      if (type !== 'video' && this.$fileController.imgSizeTooLarge(file)) {
+        this.$message({
+          type: 'error',
+          message: `图片大小不能超过${this.$fileController.IMG_SIZE}mb`,
+          duration: 900
+        })
+        return false
+      }
       if (this.userid) {
         // 上传失败，显示上传中提示
         this.loading[type] = true
@@ -432,20 +442,24 @@ export default {
       })
       // if (file) return
     },
-    handleUploadCerticater (file) {
-      // if (file) return false
-      // console.log(file)
-      // const isJPG = file.type === 'image/jpeg'
-      const isJPG = true
-      const isLt2M = file.size / 1024 / 1024 < 2
-
-      if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG 格式!')
+    handleUploadCerticaterBefore (file) {
+      if (this.$fileController.imgSizeTooLarge(file)) {
+        this.$message({
+          type: 'error',
+          message: `图片大小不能超过${this.$fileController.IMG_SIZE}mb`,
+          duration: 900
+        })
+        return false
       }
-      if (!isLt2M) {
-        this.$message.error('上传头像图片大小不能超过 2MB!')
+      if (this.userid) {
+        return
       }
-      return isJPG && isLt2M
+      this.$message({
+        typ: 'error',
+        message: '上传失败,请重新上传',
+        duration: 900
+      })
+      return false
     },
     id () {
       // 用户id 存在，就没必要重新在创建
@@ -671,6 +685,9 @@ export default {
 .zhixing {
   width: 100%;
   padding: 70px 10px;
+  padding-top: 10px;
+  padding-left: 5px;
+    padding-bottom: 50px;
   box-sizing: border-box;
   min-height: 100%;
   // height: 100%;

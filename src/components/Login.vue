@@ -64,6 +64,7 @@ export default {
             }, 250)
             console.log(data)
             localStorage.setItem('region', data.region)
+            localStorage.setItem('uid', data.id)
           })
           // alert('登陆成功')
         } else {

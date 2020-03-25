@@ -271,14 +271,22 @@ export default {
       this.xinzengdailibaobei = false
       this.ruleForm = ''
     },
-    handleUploadBefore () {
+    handleUploadBefore (file) {
+      if (this.$fileController.imgSizeTooLarge(file)) {
+        this.$message({
+          type: 'error',
+          message: `图片大小不能超过${this.$fileController.IMG_SIZE}mb`,
+          duration: 900
+        })
+        return false
+      }
       if (this.userid) {
         // 上传失败，显示上传中提示
         this.loading = true
         return
       }
       this.$message({
-        typ: 'error',
+        type: 'error',
         message: '上传失败,请重新上传',
         duration: 900
       })
@@ -409,7 +417,10 @@ export default {
     height: 100%;
   }
   .daili {
-    padding: 70px 70px;
+    // padding: 70px 70px;
+    padding: 5px;
+    padding-top: 10px;
+    padding-bottom: 50px;
     width: 100%;
     min-height: 100%;
     background-color: #fff;

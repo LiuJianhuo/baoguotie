@@ -202,6 +202,13 @@ export default {
       }
     }
   },
+  beforeRouteEnter (to, from, next) {
+    if (localStorage.getItem('phone')) {
+      next()
+      return
+    }
+    next({ name: 'loginMb' })
+  },
   created () {
     this.search()
   },
@@ -257,6 +264,7 @@ export default {
     },
     handleLogout () {
       localStorage.removeItem('region')
+      localStorage.removeItem('phone')
       this.$router.push({ name: 'loginMb' })
     },
     // 日期选择确认

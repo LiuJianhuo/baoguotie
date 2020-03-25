@@ -65,7 +65,7 @@
             <el-input v-model="ruleForm.phone" placeholder="请输入手机号" v-pure-number></el-input>
           </el-form-item>
           <el-form-item label="客户价格" prop="ctprice">
-            <el-input v-model="ruleForm.ctprice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
+            <el-input v-model="ruleForm.ctprice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格，保留小数点后两位" @blur="handleFormatNumberAfterBlur"></el-input>
           </el-form-item>
           <el-form-item label="客户来源" prop="ctsource" class="custom-from-item">
             <!-- <el-input v-model="ruleForm.ctsource" placeholdetngr="请输入客户来源"></el-input> -->
@@ -121,7 +121,7 @@
                 :show-file-list="false"
                 :on-error="handleUploadError"
                 :on-success="handleAvatarSuccess1"
-                :before-upload="beforeAvatarUpload">
+                :before-upload="handleUploadBefore">
                 <img v-if="ruleForm.imageUrl1" :src="ruleForm.imageUrl1" class="avatar">
                 <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 <div class="loading" v-loading="loading" element-loading-text="拼命上传中"></div>
@@ -133,7 +133,7 @@
               :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
               :show-file-list="false"
               :on-success="handleAvatarSuccess1"
-              :before-upload="beforeAvatarUpload">
+              :before-upload="handleUploadBefore">
               <img v-if="imageUrl1" :src="imageUrl1" class="avatar">
               <i v-else class="el-icon-plus avatar-uploader-icon"></i>
             </el-upload> -->
@@ -290,7 +290,15 @@ export default {
       const num = val.match(/^\d+(\.?\d{0,2})/)
       this.ruleForm.price = num && num[0]
     },
-    beforeAvatarUpload () {
+    handleUploadBefore (file) {
+      if (this.$fileController.imgSizeTooLarge(file)) {
+        this.$message({
+          type: 'error',
+          message: `图片大小不能超过${this.$fileController.IMG_SIZE}mb`,
+          duration: 900
+        })
+        return false
+      }
       if (this.userid) {
         // 上传失败，显示上传中提示
         this.loading = true
@@ -452,6 +460,9 @@ export default {
   }
 .kehu {
   padding: 70px 10px;
+  padding-left: 5px;
+  padding-top: 10px;
+  padding-bottom: 50px;
   box-sizing: border-box;
 }
 .kehu {

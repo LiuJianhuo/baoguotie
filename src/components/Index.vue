@@ -3,6 +3,7 @@
     <el-container>
       <el-header>
         <span class="span1">包裹贴监控系统</span>
+        <span class="region-name">{{region === 'null' ? '总部' : (region || '三通一达')}}</span>
         <a class="logout-btn" @click="handleLogout">退出</a>
       </el-header>
       <el-container>
@@ -67,6 +68,13 @@ export default {
   mounted () {
     this.yyyy()
   },
+  beforeRouteEnter (to, from, next) {
+    if (localStorage.getItem('uid')) {
+      next()
+      return
+    }
+    next({ name: 'login' })
+  },
   methods: {
     handleLogout () {
       localStorage.removeItem('region')
@@ -101,7 +109,8 @@ export default {
 <style lang='less'>
 .side-bar {
   &.el-aside {
-    width: 200px !important;
+    // width: 200px !important;
+    width: 160px !important;
   }
 }
 li {
@@ -152,7 +161,8 @@ button {
     // line-height: 160px;
     height: 100vh;
     background: rgba(0,0,0,0.3);
-    background-image: url('../assets/index-beijing.png')
+    background-image: url('../assets/index-beijing.png');
+    padding: 2px !important;
   }
 
   body > .el-container {
@@ -170,10 +180,21 @@ button {
 </style>
 
 <style lang="less" scoped>
+.region-name {
+  width:100%;
+  margin-left: 20px;
+  text-align: center;
+  height:42px;
+  font-size:22px;
+  font-family:PingFangSC-Regular,PingFang SC;
+  line-height:60px;
+  color: burlywood;
+}
 .logout-btn {
   font-size: 20px;
-  float: right;
-  margin-right: 20px;
+  // float: right;
+  margin-left: 20px;
+  color: burlywood;
   cursor: pointer;
   text-decoration: underline;
 }

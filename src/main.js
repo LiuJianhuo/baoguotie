@@ -8,6 +8,7 @@ import '@/utils/custom-vue-directive'
 import 'amfe-flexible'
 import { DatetimePicker, Popup, Swipe, SwipeItem, Toast } from 'vant'
 // import 'vant/lib/button/style'
+import fileController from '@/utils/fileController'
 
 Vue.use(ElementUI)
 Vue.use(DatetimePicker)
@@ -21,6 +22,7 @@ Vue.use(Toast)
 //   overlay: true
 // })
 Vue.prototype.$axios = axios
+Vue.prototype.$fileController = fileController
 if (process.env.NODE_ENV === 'production') { axios.defaults.baseURL = 'http://139.196.178.156:8080/' }
 
 // 关闭生产环境的提示消息

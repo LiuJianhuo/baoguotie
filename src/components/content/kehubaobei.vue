@@ -59,7 +59,7 @@
             <el-input v-model="ruleForm.phone" placeholder="请输入手机号" v-pure-number></el-input>
           </el-form-item>
           <el-form-item label="客户价格" prop="ctprice">
-            <el-input v-model="ruleForm.ctprice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格" @blur="handleFormatNumberAfterBlur"></el-input>
+            <el-input v-model="ruleForm.ctprice" @input="hanldeFormatNumberWithFocus" placeholder="请输入客户价格保留小数点后两位" @blur="handleFormatNumberAfterBlur"></el-input>
           </el-form-item>
           <el-form-item label="客户来源" prop="ctsource" class="custom-from-item">
             <!-- <el-input v-model="ruleForm.ctsource" placeholder="请输入客户来源"></el-input> -->
@@ -378,6 +378,8 @@ export default {
   width: 100%;
   // height: 100%;
   padding: 70px 10px;
+    padding-bottom: 50px;
+  padding-top: 10px;
   box-sizing: border-box;
   min-height: 100%;
   background-color: #fff;
