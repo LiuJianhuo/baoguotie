@@ -204,6 +204,7 @@ export default {
         ctprice: '', // 客户价格
         ctsource: '', // 客户来源
         startTime: '',
+        number: '',
         endTime: '',
         phone: ''
       },
@@ -344,6 +345,7 @@ export default {
             contract: this.ruleForm.contract,
             phone: this.ruleForm.phone,
             region: region,
+            number: this.ruleForm.number,
             ctprice: this.ruleForm.ctprice, // 客户价格
             ctsource: this.ruleForm.ctsource, // 客户来源
             startTime: this.ruleForm.startTime,

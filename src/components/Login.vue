@@ -27,6 +27,7 @@
 </template>
 
 <script>
+import { login } from '@/api'
 export default {
   data () {
     return {
@@ -52,34 +53,17 @@ export default {
       console.log('我点击了登录按钮')
       this.$refs.form.validate((valid) => {
         if (valid) {
-          this.$axios({
-            method: 'get',
-            url: 'temp/admin/user/login',
-            // url: 'admin/user/login',
-            params: {
-              username: this.form.username,
-              password: this.form.password
-            }
+          login({
+            username: this.form.username,
+            password: this.form.password
           }).then(data => {
-            // console.log('我是登录成功')
-            // console.log(data.data.data.region)
-            // console.log(data)
-            // console.log(data.data.msg)
-            // const msg = data.data.msg
-            if (data.data.code === '10000') {
-              // alert('登录' + msg)
-              this.$message({ message: '登录成功', type: 'success', duration: 900 })
-              localStorage.setItem('region', data.data.data.region)
-              const region = localStorage.getItem('region')
-              const time = setTimeout(() => {
-                this.$router.push({ name: 'index' })
-                clearTimeout(time)
-              }, 250)
-              // return false
-              console.log(region)
-            } else {
-              return false
-            }
+            this.$message({ message: '登录成功', type: 'success', duration: 900 })
+            const time = setTimeout(() => {
+              this.$router.push({ name: 'index' })
+              clearTimeout(time)
+            }, 250)
+            console.log(data)
+            localStorage.setItem('region', data.region)
           })
           // alert('登陆成功')
         } else {

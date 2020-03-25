@@ -150,7 +150,7 @@
               accept="image/*"
               :limit="3"
               list-type="picture-card"
-              :before-upload="beforeAvatarUpload">
+              :before-upload="handleUploadCerticater">
               <i class="el-icon-plus append-word front-pic" ></i>
               <!-- <el-button class="" size="small" type="primary">点击上传</el-button> -->
             </el-upload>
@@ -166,7 +166,7 @@
               accept="image/*"
               :limit="10"
               list-type="picture-card"
-              :before-upload="beforeAvatarUpload">
+              :before-upload="handleUploadCerticater">
               <i class="el-icon-plus append-word copy-paste"></i>
               <!-- <el-button class="" size="small" type="primary">点击上传</el-button> -->
             </el-upload>
@@ -182,7 +182,7 @@
               accept="image/*"
               :limit="10"
               list-type="picture-card"
-              :before-upload="beforeAvatarUpload">
+              :before-upload="handleUploadCerticater">
               <i class="el-icon-plus append-word order"></i>
               <!-- <el-button class="" size="small" type="primary">点击上传</el-button> -->
             </el-upload>
@@ -432,7 +432,9 @@ export default {
       })
       // if (file) return
     },
-    beforeAvatarUpload (file) {
+    handleUploadCerticater (file) {
+      // if (file) return false
+      // console.log(file)
       // const isJPG = file.type === 'image/jpeg'
       const isJPG = true
       const isLt2M = file.size / 1024 / 1024 < 2
