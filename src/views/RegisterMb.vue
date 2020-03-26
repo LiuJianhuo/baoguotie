@@ -1,9 +1,12 @@
 <template>
   <div class="register mb-mode">
     <div class="img-wrap">
-      <div class="line-over"></div>
-      <img src="@/assets/mb-logo.png" alt="">
-      <img class="mb-logo-append" src="@/assets/mb-logo-append.png" alt="">
+      <img src="@/assets/mb-logo.jpg" alt="">
+      <div class="logo-append-wrap">
+        <div class="line-over"></div>
+        <img class="logo-append" src="@/assets/mb-logo-append.png" alt="">
+        <img class="logo-text" src="@/assets/logo-text.png" alt="">
+      </div>
       <p class="title">注册</p>
     </div>
     <el-form class="form" ref="form" :model="form" @submit.native.prevent :rules="rules">
@@ -190,17 +193,31 @@ export default {
       font-weight:500;
       color:rgba(51,51,51,1);
     }
-    .img-wrap {
+     .img-wrap {
       position: relative;
       width: 100%;
+      .logo-append-wrap {
+        width: 100%;
+        position: relative;
+        .logo-text {
+          position: absolute;
+          top: -0.30rem;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          width: 5.6rem;
+          width: 8rem;
+        }
+      }
       img {
         width: 100%;
         vertical-align: top;
       }
-      .mb-logo-append {
+      .logo-append {
         margin-top: -3px;
         // padding-top: 1px;
         background-color: #fe2a50;
+        padding-top: .4rem;
         border: none;
         outline: none;
       }

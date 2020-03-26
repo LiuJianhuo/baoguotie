@@ -1,9 +1,12 @@
 <template>
   <div class="login mb-mode">
     <div class="img-wrap">
-      <div class="line-over"></div>
-      <img src="@/assets/mb-logo.png" alt="">
-      <img class="logo-append" src="@/assets/mb-logo-append.png" alt="">
+      <img src="@/assets/mb-logo.jpg" alt="">
+      <div class="logo-append-wrap">
+        <div class="line-over"></div>
+        <img class="logo-append" src="@/assets/mb-logo-append.png" alt="">
+        <img class="logo-text" src="@/assets/logo-text.png" alt="">
+      </div>
       <p class="title">登录</p>
     </div>
     <el-form class="form" ref="form" :model="form" @submit.native.prevent :rules="rules">
@@ -116,6 +119,19 @@ export default {
     .img-wrap {
       position: relative;
       width: 100%;
+      .logo-append-wrap {
+        width: 100%;
+        position: relative;
+        .logo-text {
+          position: absolute;
+          top: -0.30rem;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          width: 5.6rem;
+          width: 8rem;
+        }
+      }
       img {
         width: 100%;
         vertical-align: top;
@@ -124,6 +140,7 @@ export default {
         margin-top: -3px;
         // padding-top: 1px;
         background-color: #fe2a50;
+        padding-top: .4rem;
         border: none;
         outline: none;
       }
@@ -137,7 +154,7 @@ export default {
     }
   }
   .form {
-    margin-top: -10px;
+    margin-top: -0px;
     box-sizing: border-box;
     padding: 0px 13.67px;
     background-color: #ffffff;

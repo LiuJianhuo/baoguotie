@@ -6,7 +6,7 @@
       <button class="btn" @click="handleLogout">退出</button>
     </nav>
     <div class="img-wrap">
-      <img src="@/assets/logo.png" alt="">
+      <img src="@/assets/index-logo.jpg" alt="">
     </div>
     <div class="bd box">
       <div class="box-item clearfix">
@@ -101,12 +101,12 @@
           </div>
         </div>
         <div class="pic-display">
-          <ul class="list clearfix" @click="handleShowPicGallary([item.headpic, item.headpic1])">
-            <li class="list__item">
+          <ul class="list clearfix">
+            <li class="list__item" @click="handleShowPicGallary([item.headpic, item.headpic1], 0)">
               <img class="pic" :src="item.headpic">
             </li>
             <li class="list__item">
-              <img class="pic" :src="item.headpic1">
+              <img class="pic" :src="item.headpic1" @click="handleShowPicGallary([item.headpic, item.headpic1], 1)">
             </li>
           </ul>
         </div>
@@ -117,8 +117,8 @@
           </div>
         </div>
         <div class="pic-display">
-          <ul class="list scroll clearfix" @click="handleShowPicGallary(contractimgList)">
-            <li class="list__item" v-for="(item, index) in contractimgList" :key="index">
+          <ul class="list scroll clearfix">
+            <li class="list__item" v-for="(item, index) in contractimgList" :key="index" @click="handleShowPicGallary(contractimgList, index)">
               <img class="pic" :src="item">
             </li>
           </ul>
@@ -137,17 +137,17 @@
         </div>
       </div>
       </div>
-    <div class="pic-gallary" :class="showPicGallary ? 'show' : ''" >
-      <van-swipe class="gallary-swipe" indicator-color="#FF2746" :loop="false">
+    <!-- <div class="pic-gallary" :class="showPicGallary ? 'show' : ''" >
+      <van-swipe class="gallary-swipe" indicator-color="#FF2746" :loop="false" :initial-swipe="gallaryActiveItem">
         <van-swipe-item v-for="(item, index) in picGallaryList" :key="index">
           <div class="gallary-box">
-            <img :src="item" alt="">
+            <img :src="item" alt="" @click="handleImgScale(item)">
           </div>
         </van-swipe-item>
       </van-swipe>
-    </div>
+    </div> -->
     <div class="mask" :class="showMask ? 'show' : ''" ref="mask"></div>
-    <van-popup v-model="showDatePicker"
+    <!-- <van-popup v-model="showDatePicker"
        position="bottom">
       <van-datetime-picker
         v-model="currentDate"
@@ -156,7 +156,15 @@
         @confirm="handleDatePickerConfirm"
         @cancel="showDatePicker = false"
       />
-    </van-popup>
+    </van-popup> -->
+    <van-image-preview v-model="showPicGallary" :images="picGallaryList" :startPosition="gallaryActiveItem" :maxZoom="2">
+      <!-- <template v-slot:index>
+        <img class="img" :src="scaleItem" alt="">
+      </template> -->
+    </van-image-preview>
+    <!-- <div class="img-scale-wrap" v-show="scaleItem" @click="handleImgScale(null)">
+      <img class="img" :src="scaleItem" alt=""  ref="scaleImg" :style="{width: img.width, height: img.height}">
+    </div> -->
   </div>
 </template>
 
@@ -184,6 +192,12 @@ export default {
         userType: 3,
         // region: localStorage.getItem('region'),
         phone: localStorage.getItem('phone')
+      },
+      gallaryActiveItem: 0,
+      scaleItem: '',
+      img: {
+        width: '900h',
+        height: '90vw'
       },
       allNetDots: [],
       allProvinces: [],
@@ -252,6 +266,27 @@ export default {
     this.$refs.mask.removeEventListener('click', this.handleMaskClick)
   },
   methods: {
+    handleImgScale (src) {
+      this.scaleItem = src
+      if (src) {
+        const img = new Image()
+        img.src = src
+        img.onload = () => {
+          const winWidth = window.innerWidth
+          const winHeight = window.innerHeight
+          const wScale = img.width / winWidth
+          const hScale = img.height / winHeight
+          const offset = 20
+          if (hScale < wScale) {
+            this.img.height = winHeight - offset
+            this.img.width = winWidth - (offset * img.width / img.height) + 'px'
+          } else {
+            this.img.width = winWidth - offset
+            this.img.height = winHeight - (offset * img.height / img.width) + 'px'
+          }
+        }
+      }
+    },
     handleMaskTouchMove (e) {
       console.log(e.cancelable)
       if (typeof event.cancelable !== 'boolean' || event.cancelable) {
@@ -293,13 +328,15 @@ export default {
         this.handleHiddenPicGallary()
       }
     },
-    handleShowPicGallary (list) {
+    handleShowPicGallary (list, index) {
       this.picGallaryList = list
-      this.showMask = true
+      this.gallaryActiveItem = index
+      console.log(index)
+      // this.showMask = true
       this.showPicGallary = true
       // 滚动的Y距离
       // this.scrollTop = document.documentElement.scrollTop || document.body.scrollTop
-      document.body.classList.add('overflow-hidden')
+      // document.body.classList.add('overflow-hidden')
     },
     handleHiddenPicGallary () {
       document.body.classList.remove('overflow-hidden')
@@ -450,6 +487,29 @@ export default {
 </script>
 
 <style lang="less">
+.img-scale-wrap {
+  position: fixed;
+  height: 100%;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  width: 100%;
+  z-index: 100000;
+  background-color: black;
+  opacity: 1;
+  .img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    // top: 100px;
+    // width: 90%;
+    width: 95vh;
+    height: 98vw;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    // transform: translate(-50%, -50%);
+    // z-index: 100000000;
+  }
+}
 //element ui 表单控件样式
 .box-item {
   height: 40px;
@@ -595,12 +655,12 @@ export default {
     .pic-display {
       position: relative;
       .list {
-        height: 2.666667rem;
+        height: 4.666667rem;
         .list__item {
           float: left;
           width: calc(50% - 10px);
           margin-right: 10px;
-          height: 2.666667rem;
+          height: 4.666667rem;
           border: 1px solid #f7f5f5;
           overflow: hidden;
           border-radius: 6px;
@@ -617,7 +677,7 @@ export default {
           overflow-y: hidden;
           overflow-x: auto;
           white-space: nowrap;
-          height: 2.72rem;
+          height: 4.666667rem;
           &::-webkit-scrollbar {
             display: none;
           }
@@ -626,7 +686,7 @@ export default {
             vertical-align: top;
             float: none;
             width: 4.506667rem;
-            height: 2.666667rem;
+            height: 4.666667rem;
           }
         }
       }
@@ -657,6 +717,7 @@ export default {
       position: fixed;
       top: 4rem;
       width: 95%;
+      height: 5.333333rem;
       z-index: 1000;
       left: 50%;
       display: none;
@@ -674,7 +735,7 @@ export default {
       }
       .gallary-swipe {
         width: 100%;
-        height: 5.333333rem;
+        height: 7.333333rem;
         background-color: #ffffff;
       }
     }

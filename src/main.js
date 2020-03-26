@@ -6,7 +6,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
 import '@/utils/custom-vue-directive'
 import 'amfe-flexible'
-import { DatetimePicker, Popup, Swipe, SwipeItem, Toast } from 'vant'
+import { DatetimePicker, Popup, Swipe, SwipeItem, Toast, ImagePreview } from 'vant'
 // import 'vant/lib/button/style'
 import fileController from '@/utils/fileController'
 
@@ -16,6 +16,7 @@ Vue.use(Popup)
 Vue.use(Swipe)
 Vue.use(SwipeItem)
 Vue.use(Toast)
+Vue.use(ImagePreview)
 // Toast({
 //   message: 'dfjf你好',
 //   duration: 100000,
