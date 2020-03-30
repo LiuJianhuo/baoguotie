@@ -2,13 +2,13 @@
   <div class="login">
     <div class="login-beijing">
       <div class="login-top">
-        包裹贴监控系统
+        喜递广告监测系统
       </div>
       <div class="login-content">
         <div class="login-login">
           <div class="login-login-top">
             <p>
-              包裹贴监控系统
+              喜递广告监测系统
             </p>
           </div>
           <el-form ref="form" :model="form" label-width="80px">
@@ -65,6 +65,8 @@ export default {
             console.log(data)
             localStorage.setItem('region', data.region)
             localStorage.setItem('uid', data.id)
+          }).catch(err => {
+            this.$message({ message: err.message, type: 'error', duration: 900 })
           })
           // alert('登陆成功')
         } else {

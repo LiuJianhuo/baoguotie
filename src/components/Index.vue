@@ -2,7 +2,7 @@
   <div class="index">
     <el-container>
       <el-header>
-        <span class="span1">包裹贴监控系统</span>
+        <span class="span1">喜递广告监测系统</span>
         <span class="region-name">{{region === 'null' ? '总部' : (region || '三通一达')}}</span>
         <a class="logout-btn" @click="handleLogout">退出</a>
       </el-header>
@@ -25,7 +25,7 @@
                   </el-menu-item>
                   <el-menu-item index="kehubaobei" :route="{name:'kehubaobei'}">
                     <i class="el-icon-menu"></i>
-                    <span slot="title">客户报备</span>
+                    <span slot="title">业务报备</span>
                   </el-menu-item>
                 </div>
                 <div id="yy">

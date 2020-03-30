@@ -1,65 +1,109 @@
 <template>
   <div class="zhixing">
     <div class="top">
-      <input class="input" v-model="searchForm.username" placeholder="请输入需要搜索的内容">
+      <input class="input" v-model="searchForm.username" placeholder="请输入要搜索的客户名称">
       <button class="btn-1" @click="handleSearch">搜索</button>
       <button class="btn reset-btn" @click="handleResetSearch">重置</button>
-      <button class="btn-2" @click="outerVisible=true; id()">新增执行报备</button>
+      <button class="btn-2" @click="handleAddReport">新增执行报备</button>
     </div>
     <div class="center">
-      <div class="center-1">
-        <div>报备公司</div>
-        <div>客户名称</div>
-        <div>联系方式</div>
-        <div>投放城市</div>
-        <div>投放网点</div>
-        <div>投放日期</div>
-        <div>投放数量</div>
-        <div>印刷物流证明</div>
-        <div>图片证明</div>
-        <div>视频证明</div>
-        <div>报备时间</div>
-      </div>
-      <div class="center-2">
-        <ul v-for="(item, index) in list" :key="item.id">
-          <li>
-            <div>{{item.region === 'null' ? '总部' : (item.region || '--')}}</div>
-            <div>{{item.username}}</div>
-            <div>{{item.phone || '--'}}</div>
-            <div>{{item.province}} {{item.city}}</div>
-            <div>{{item.dot}}</div>
-            <div>{{item.dttime}}</div>
-            <div>{{item.number}}</div>
-            <div>
-              <el-image
-                style="width: 120px; height: 63px"
-                :src="item.headpic"
-                :preview-src-list="[item.headpic, item.headpic1]">
-              </el-image>
-            </div>
-            <div>
-              <el-image
-                @click="handleGetPicList('contract', index, item)"
-                style="width: 120px; height: 63px"
-                :src="(item.contractimg && typeof item.contractimg === 'object') ? item.contractimg[0] : item.contractimg"
-                :preview-src-list="(item.contractimg && typeof item.contractimg === 'object') ? item.contractimg : [item.contractimg]">
-              </el-image>
-            </div>
-            <div>
-              <!-- <el-image
-                style="width: 120px; height: 63px"
-                :src="item.executeimg"
-                :preview-src-list="[item.executeimg]">
-              </el-image> -->
-              <video v-if="item.executeimg"
-                style="width: 120px; height: 63px"
-                :src="item.executeimg" controls>
-              </video>
-            </div>
-            <div>{{item.createTime}}</div>
-          </li>
-        </ul>
-      </div>
+      <el-table
+        :data="list"
+        border
+        highlight
+        fit
+        style="width: 100%">
+        <el-table-column
+          fixed
+          label="报备公司"
+          align="center">
+          <template slot-scope="scope">
+            {{scope.row.region === 'null' ? '总部' : (scope.row.region || '--')}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="username"
+          label="客户名称"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          prop="phone"
+          label="联系方式"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          label="投放城市"
+          align="center">
+          <template slot-scope="scope">
+            {{scope.row.province}} {{scope.row.city}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="dot"
+          label="投放网点"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          prop="dttime"
+          label="投放日期"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          prop="number"
+          label="投放数量"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          label="印刷物流证明"
+          width="120"
+          align="center">
+          <template slot-scope="scope">
+            <el-image
+              style="width: 120px; height: 63px"
+              :src="scope.row.headpic"
+              :preview-src-list="[scope.row.headpic, scope.row.headpic1]">
+            </el-image>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="图片证明"
+          width="120"
+          align="center">
+          <template slot-scope="scope">
+            <el-image
+              @click="handleGetPicList('contract', scope.$index, scope.row)"
+              style="width: 120px; height: 63px"
+              :src="(scope.row.contractimg && typeof scope.row.contractimg === 'object') ? scope.row.contractimg[0] : scope.row.contractimg"
+              :preview-src-list="(scope.row.contractimg && typeof scope.row.contractimg === 'object') ? scope.row.contractimg : [scope.row.contractimg]">
+            </el-image>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="视频证明"
+          width="120"
+          align="center">
+          <template slot-scope="scope">
+            <video v-if="scope.row.executeimg"
+              style="width: 120px; height: 63px"
+              :src="scope.row.executeimg" controls>
+            </video>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="createTime"
+          align="center"
+          label="报备时间">
+        </el-table-column>
+        <el-table-column
+          label="操作"
+          align="center"
+          width="100">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click="handleOpenEditReportDialog(scope.row, scope.$index)">编辑</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
        <el-pagination
         class="pagination"
         @current-change="handlePageNumChange"
@@ -70,7 +114,7 @@
         :total="totalPages">
       </el-pagination>
     </div>
-    <el-dialog :visible.sync="outerVisible">
+    <el-dialog :visible.sync="showReportDialog">
       <div class="zhixing-1">
         <p class="p1">执行报备</p>
         <el-form :model="ruleForm" :rules="rules" ref="ruleForm" class="demo-ruleForm">
@@ -82,13 +126,13 @@
           </el-form-item>
           <div><span class="c-red">*</span>投放城市</div>
           <el-form-item prop="province">
-            <el-select v-model="ruleForm.region" placeholder="地区  （必 填）" class="aj6" @change="handleRegionChange">
+            <el-select v-model="ruleForm.area" placeholder="地区  （必 填）" class="aj6" @change="handleRegionChange">
               <el-option v-for="(item, index) in regionList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
             <el-select v-model="ruleForm.province" placeholder="省份  （必 填）" class="aj6" @change="handleProvinceChange">
               <el-option v-for="(item, index) in provinceList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
-            <el-select v-model="ruleForm.city" placeholder="城市  （必 填）" class="aj6" @change="handleCityChange">
+            <el-select v-model="ruleForm.city" placeholder="城市  （必 填）" class="aj6">
               <el-option v-for="(item, index) in cityList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
           </el-form-item>
@@ -151,6 +195,7 @@
               multiple
               accept="image/*"
               :limit="3"
+              :file-list="uploadUrls.certificater1"
               list-type="picture-card"
               :before-upload="handleUploadCerticaterBefore">
               <i class="el-icon-plus append-word front-pic" ></i>
@@ -218,10 +263,10 @@
 
 <script>
 import actions from '../../config/ima'
-import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName, getAreaListFromCityName } from '@/components/uitl/jsAddress.js'
+import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName } from '@/components/uitl/jsAddress.js'
 
 import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
-import { deletePic, getPicList, createUserId, getUserList, userRegister } from '@/api/index'
+import { deletePic, getPicList, createUserId, getUserList, addReport, updateReport } from '@/api/index'
 
 export default {
   data () {
@@ -262,11 +307,11 @@ export default {
       imageUrl1: '',
       userid: '',
       formatTime: '',
-      list: '',
+      list: [],
       provinceMap: getProvinceMap(), // 省份
       cityMap: null, // 城市
       centerDialogVisible: false,
-      outerVisible: false,
+      showReportDialog: false,
       uploadUrls: {
         logistics: '', // 印刷物流
         print: '', // 印刷物流
@@ -294,11 +339,11 @@ export default {
       },
       ruleForm: {
         username: '',
+        area: '',
+        province: '',
         city: '',
         dttime: '',
         number: '',
-        // dttime1: '',
-        province: '',
         dot: '',
         phone: ''
       },
@@ -334,7 +379,103 @@ export default {
   created () {
     this.getList()
   },
+  watch: {
+    showReportDialog (val) {
+      // 修改报备状态，就根据根据大区查找省份,根据省份查找城市
+      if (this.isUpdateReportState && val) {
+        this.provinceList = getProvinceListFromRegionName(this.ruleForm.area)
+        this.cityList = getCityListFromProvinceName(this.ruleForm.province)
+      }
+      // 关闭时，若果是修改状态的话那就重置编辑框内的数据
+      if (!val) {
+        if (this.isUpdateReportState) {
+          this.isUpdateReportState = false
+          this.clearReportDialogFields()
+        }
+      }
+    }
+  },
   methods: {
+    handleAddReport () {
+      // 创建id
+      this.id()
+      this.showReportDialog = true
+    },
+    // 清除报备弹窗里字段数据
+    clearReportDialogFields () {
+      if (this.$refs.ruleForm) {
+        this.resetRuleForm()
+        this.$refs.ruleForm.resetFields()
+      }
+    },
+    // 打开编辑报备弹窗
+    handleOpenEditReportDialog (row, index) {
+      // 清空报备弹窗里原有的数据
+      this.clearReportDialogFields()
+      this.isUpdateReportState = true
+      // 存一份原报备数据信息和拷贝一份报备数据，用于展现和修改
+      this.oldReportInf = row
+      this.ruleForm = Object.keys(this.ruleForm).reduce((result, key) => {
+        result[key] = row[key]
+        return result
+      }, {})
+      this.userid = row.id
+      this.uploadUrls.print = row.headpic
+      this.uploadUrls.logistics = row.headpic1
+      this.uploadUrls.video = row.executeimg
+      this.handleGetPicList('contract', index, row, imgList => {
+        this.uploadUrls.certificater1 = imgList.map((item, index) => {
+          return {
+            name: index,
+            url: item
+          }
+        })
+      })
+      // this.uploadUrls = Object.keys(this.uploadUrls).reduce((result, key) => {
+      //   result[key] = row[key]
+      //   return result
+      // }, {})
+      // uploadUrls: {
+      //   logistics: '', // 印刷物流
+      //   print: '', // 印刷物流
+      //   video: '',
+      //   certificater1: [],
+      //   certificater2: [],
+      //   certificater3: []
+      // },
+      setTimeout(() => {
+        this.showReportDialog = true
+      }, 200)
+    },
+    // 提交修改报备
+    handleUpdateReport () {
+      console.log(this.ruleForm)
+      // 比对前后新旧报备数据信息，将被修改数据提交给后台修改
+      const oldReportInf = this.oldReportInf
+      const newReportInf = this.ruleForm
+      const updatedReportInf = Object.keys(newReportInf).reduce((result, key) => {
+        if (oldReportInf[key] !== newReportInf[key] && key !== 'contractimg') {
+          result[key] = newReportInf[key]
+        }
+        return result
+      }, {})
+      if (Object.keys(updatedReportInf).length < 1) {
+        this.$message({ message: '修改成功', type: 'success', duration: 900 })
+        this.showReportDialog = false
+        return
+      }
+      updatedReportInf.id = oldReportInf.id
+      console.group('被修改报备信息')
+      console.log(updatedReportInf)
+      console.groupEnd()
+      updateReport(updatedReportInf).then(data => {
+        this.getList()
+        this.$message({ message: '修改成功', type: 'success', duration: 900 })
+        this.showReportDialog = false
+      }).catch(err => {
+        this.$message({ message: err.message, type: 'error', duration: 900 })
+      })
+    },
     // 页码改变
     handlePageNumChange (val) {
       this.searchForm.page = val
@@ -349,28 +490,21 @@ export default {
       this.searchForm = Object.assign({}, this.searchForm, this.page, { username: '' })
       this.getList()
     },
-    handleGetPicList (findex, index, { id, contractimg }) {
+    handleGetPicList (findex, index, { id, contractimg }, cb) {
       if (!contractimg) return
       if (typeof contractimg === 'object') return
       getPicList({
         findex,
         bindId: id
       }).then(data => {
-        this.list[index].contractimg = data && data.map(({ url }) => {
+        const imgList = data && data.map(({ url }) => {
           return url
         })
-        console.log(this.list[index].contractimg)
+        this.list[index].contractimg = imgList
+        if (typeof cb === 'function') cb(imgList)
       }).catch(err => {
         console.log(err)
       })
-    },
-    handleRegionChange (regionName) {
-      console.log(regionName)
-      this.ruleForm.province = ''
-      this.ruleForm.city = ''
-      this.ruleForm.area = ''
-      this.provinceList = getProvinceListFromRegionName(regionName)
-      console.log(getProvinceListFromRegionName(regionName))
     },
     getList () {
       getUserList(this.searchForm).then(data => {
@@ -462,14 +596,17 @@ export default {
       return false
     },
     id () {
-      // 用户id 存在，就没必要重新在创建
-      if (this.userid) return
+      // 创建报备id
+      if (this.newUserId) {
+        this.userid = this.newUserId
+        return
+      }
+      console.log('新建id')
       createUserId().then(data => {
-        console.log('=============')
-        console.log(data)
+        this.newUserId = data
         this.userid = data
       }).catch(err => {
-        console.log('执行报备用户id失败：' + err.message)
+        console.log('创建报备id失败:' + err.message)
       })
     },
     submitForm (formName) {
@@ -500,29 +637,23 @@ export default {
         const region = localStorage.getItem('region')
         if (valid) {
           console.log(this.$refs[formName])
-          userRegister({
-            username: this.ruleForm.username,
-            city: this.ruleForm.city,
-            province: this.ruleForm.province,
-            dot: this.ruleForm.dot,
-            dttime: this.ruleForm.dttime,
-            phone: this.ruleForm.phone,
-            region: region,
-            number: this.ruleForm.number,
+          if (this.isUpdateReportState) {
+            this.handleUpdateReport()
+            return
+          }
+          const form = Object.assign({
+            region,
             state: 0,
             userType: 3,
             id: this.userid
-          }).then(data => {
-            this.outerVisible = false
+          }, this.ruleForm)
+          addReport(form).then(data => {
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
             this.getList()
-            this.resetRuleForm()
+            this.showReportDialog = false
           }).catch(err => {
-            console.log('执行报备注册失败：' + err.message)
+            this.$message({ message: err.message, type: 'error', duration: 900 })
           })
-        } else {
-          console.log('error submit!!')
-          return false
         }
       })
     },
@@ -551,21 +682,22 @@ export default {
     },
     centerDialogVisible1 () {
       this.centerDialogVisible = false
-      this.outerVisible = false
+      this.showReportDialog = false
       this.ruleForm = ''
+    },
+    // 大区改变
+    handleRegionChange (regionName) {
+      console.log(regionName)
+      this.ruleForm.province = ''
+      this.ruleForm.city = ''
+      this.cityList = null
+      this.provinceList = getProvinceListFromRegionName(regionName)
+      console.log(getProvinceListFromRegionName(regionName))
     },
     // 处理省份改变
     handleProvinceChange (provinceName) {
       this.ruleForm.city = null
-      this.ruleForm.area = null
       this.cityList = getCityListFromProvinceName(provinceName)
-    },
-    // 处理城市改变
-    handleCityChange (cityName) {
-      this.ruleForm.area = ''
-      this.areaList = getAreaListFromCityName(cityName)
-      console.log('小地球')
-      console.log(this.areaList)
     },
     // 处理城市选择
     handleCitySelect () {

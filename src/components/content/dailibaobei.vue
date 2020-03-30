@@ -1,38 +1,78 @@
 <template>
   <div class="daili">
     <div class="top">
-      <input class="input" v-model="searchForm.username" placeholder="请输入需要搜索的内容">
+      <input class="input" v-model="searchForm.username" placeholder="请输入要搜索的代理名称">
       <button class="btn-1" @click="handleSearch">搜索</button>
       <button class="btn reset-btn" @click="handleResetSearch">重置</button>
-      <button class="btn-2" @click="xinzengdailibaobei=true; id()">新增代理报备</button>
+      <button class="btn common-btn export-btn" @click="handleExport">导出</button>
+      <button class="btn-2" @click="handleAddReport">新增代理报备</button>
     </div>
     <div class="center">
-      <div class="center-1">
-        <div>代理公司</div>
-        <div>联系方式</div>
-        <div>代理城市</div>
-        <div>代理价格</div>
-        <div>合同影印件</div>
-        <div>报备时间</div>
-      </div>
-      <div class="center-2">
-        <ul v-for="item in list" :key="item.id">
-          <li>
-            <div>{{item.username}}</div>
-            <div>{{item.phone}}</div>
-            <div>{{item.province}} {{item.city}}</div>
-            <div>{{item.price}}</div>
-            <div>
-              <el-image
-                style="width: 120px; height: 63px"
-                :src="item.contractimg"
-                :preview-src-list="[item.contractimg]">
-              </el-image>
-            </div>
-            <div>{{item.createTime}}</div>
-          </li>
-        </ul>
-      </div>
+      <el-table
+        :data="list"
+        border
+        highlight
+        fit
+        style="width: 100%">
+        <el-table-column
+          fixed
+          prop="username"
+          label="代理公司"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          prop="phone"
+          label="联系方式"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          label="代理城市"
+          align="center">
+          <template slot-scope="scope">
+            {{scope.row.province}} {{scope.row.city}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="price"
+          label="代理价格"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          prop="promisePrice"
+          label="保证金"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          prop="firstNeedPay"
+          label="首笔预付款"
+          align="center">
+        </el-table-column>
+        <el-table-column
+          label="合同影印件"
+          width="120"
+          align="center">
+          <template slot-scope="scope">
+            <el-image
+              style="width: 120px; height: 63px"
+              :src="scope.row.contractimg"
+              :preview-src-list="[scope.row.contractimg]">
+            </el-image>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="createTime"
+          align="center"
+          label="报备时间">
+        </el-table-column>
+        <el-table-column
+          label="操作"
+          align="center"
+          width="100">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click="handleUpdate(scope.row)">编辑</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
       <el-pagination
         class="pagination"
         @current-change="handlePageNumChange"
@@ -43,7 +83,7 @@
         :total="totalPages">
       </el-pagination>
     </div>
-    <el-dialog :visible.sync="xinzengdailibaobei">
+    <el-dialog :visible.sync="showReportDialog">
       <div class="daili-1">
         <p>代理报备</p>
         <el-form :model="ruleForm" :rules="rules" ref="ruleForm" class="demo-ruleForm">
@@ -55,22 +95,28 @@
           </el-form-item>
           <div><span class="c-red">*</span>代理城市</div>
           <el-form-item prop="city">
-            <el-select v-model="ruleForm.region" placeholder="地区  （必 填）" class="aj6" @change="handleRegionChange">
+            <el-select v-model="ruleForm.area" placeholder="地区  （必 填）" class="aj6" @change="handleRegionChange">
               <el-option v-for="(item, index) in regionList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
             <el-select v-model="ruleForm.province" placeholder="省份  （必 填）" class="aj6" @change="handleProvinceChange">
               <el-option v-for="(item, index) in provinceList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
-            <el-select v-model="ruleForm.city"  placeholder="城市  （必 填）" class="aj6" @change="handleCityChange">
+            <el-select v-model="ruleForm.city"  placeholder="城市  （必 填）" class="aj6">
               <el-option v-for="(item, index) in cityList" :key="index" :label="item" :value="item"></el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="代理价格" prop="price">
-            <el-input v-model="ruleForm.price" placeholder="请输入代理价格，保留小数点后两位" @input="hanldeFormatNumberWithInput" @blur="handleFormatNumberAfterBlur"></el-input>
+            <el-input v-model="ruleForm.price" placeholder="请输入代理价格，保留小数点后两位" @input="val => hanldeFormatNumberWithInput(val, 'price')" @blur="handleFormatNumberAfterBlur"></el-input>
+          </el-form-item>
+          <el-form-item label="保证金" prop="promisePrice">
+            <el-input v-model="ruleForm.promisePrice" placeholder="请输入保证金" v-pure-number></el-input>
+          </el-form-item>
+          <el-form-item label="首笔预付款" prop="firstNeedPay">
+            <el-input v-model="ruleForm.firstNeedPay" placeholder="请输入首笔预付款" v-pure-number></el-input>
           </el-form-item>
             <div><span class="c-red">*</span> 合同影印件</div>
             <div class="clearfix knjsovosv">
-              <el-form-item prop="contract">
+              <el-form-item prop="contractimg">
                 <el-upload
                   class="avatar-uploader"
                   :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
@@ -79,7 +125,7 @@
                   :on-success="handleUploadSuccess"
                   :on-error="handleUploadError"
                   :before-upload="handleUploadBefore">
-                  <img v-if="ruleForm.contract" :src="ruleForm.contract" class="avatar">
+                  <img v-if="ruleForm.contractimg" :src="ruleForm.contractimg" class="avatar">
                   <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                   <div class="loading" v-loading="loading" element-loading-text="拼命上传中"></div>
                 </el-upload>
@@ -105,10 +151,9 @@
 </template>
 
 <script>
-import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
-import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName, getAreaListFromCityName } from '@/components/uitl/jsAddress.js'
+import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName } from '@/components/uitl/jsAddress.js'
 import actions from '../../config/ima'
-import { createUserId, getUserList, userRegister } from '@/api'
+import { createUserId, getUserList, addReport, updateReport, exportReports } from '@/api'
 export default {
   data () {
     var checkPhone = (rule, value, callback) => {
@@ -125,27 +170,30 @@ export default {
       }
     }
     return {
-      regionList: getRegionList(),
-      provinceList: null,
-      cityList: null,
-      areaList: null,
-      xinzengdailibaobei: false,
+      regionList: getRegionList(), // 大区列表
+      provinceList: null, // 省份列表
+      cityList: null, // 城市列表
+      showReportDialog: false,
       actions,
-      provinceMap: getProvinceMap(), // 省份
-      cityMap: null, // 城市
       centerDialogVisible: false,
       list: [],
       userid: '',
+      newUserId: '',
       searchVal: '',
       loading: false,
+      isUpdateReportState: false, // 是否是修改状态
       ruleForm: {
-        region: '',
         username: '',
-        city: '',
-        price: '',
-        contract: '',
+        area: '', // 大区
         province: '',
-        phone: ''
+        city: '',
+        contractimg: '',
+        price: '',
+        phone: '',
+        promisePrice: '',
+        firstNeedPay: ''
+      },
+      oldReportInf: { // 旧的报备信息，用于报备编辑后前后对比，将修改的信息进行提交
       },
       searchForm: {
         userType: 1,
@@ -169,7 +217,13 @@ export default {
         price: [
           { required: true, message: '请输入代理价格', trigger: 'blur' }
         ],
-        contract: [
+        promisePrice: [
+          { required: true, message: '请输入保证金', trigger: 'blur' }
+        ],
+        firstNeedPay: [
+          { required: true, message: '请输入首笔预付款', trigger: 'blur' }
+        ],
+        contractimg: [
           { required: true, message: '请上传合同影印件', trigger: 'blur' }
         ],
         phone: [
@@ -183,19 +237,89 @@ export default {
     // this.id()
     this.getList()
   },
+  watch: {
+    showReportDialog (val) {
+      // 修改报备状态，就根据根据大区查找省份,根据省份查找城市
+      if (this.isUpdateReportState && val) {
+        this.provinceList = getProvinceListFromRegionName(this.ruleForm.area)
+        this.cityList = getCityListFromProvinceName(this.ruleForm.province)
+      }
+      // 关闭时，若果是修改状态的话那就重置编辑框内的数据
+      if (!val) {
+        if (this.isUpdateReportState) {
+          this.isUpdateReportState = false
+          this.clearReportDialogFields()
+        }
+      }
+    }
+  },
   methods: {
+    handleUpdate (row) {
+      this.clearReportDialogFields()
+      this.isUpdateReportState = true
+      this.oldReportInf = row // 存一份原报备数据信息
+      // 拷贝一份报备数据，用于展现和修改
+      this.ruleForm = Object.keys(this.ruleForm).reduce((result, key) => {
+        result[key] = row[key]
+        return result
+      }, {})
+      this.userid = row.id
+      this.showReportDialog = true
+    },
+    // 新增报备
+    handleAddReport () {
+      this.isUpdateReportState = false
+      this.id()
+      this.showReportDialog = true
+    },
+    // 清除报备弹窗里字段数据
+    clearReportDialogFields () {
+      if (this.$refs.ruleForm) {
+        this.resetRuleForm()
+        this.$refs.ruleForm.resetFields()
+      }
+    },
+    // 提交修改报备
+    handleUpdateReport () {
+      console.log(this.ruleForm)
+      // 比对前后新旧报备数据信息，将被修改数据提交给后台修改
+      const oldReportInf = this.oldReportInf
+      const newReportInf = this.ruleForm
+      const updatedReportInf = Object.keys(newReportInf).reduce((result, key) => {
+        if (oldReportInf[key] !== newReportInf[key] && key !== 'contractimg') {
+          result[key] = newReportInf[key]
+        }
+        return result
+      }, {})
+      if (Object.keys(updatedReportInf).length < 1) {
+        this.$message({ message: '修改成功', type: 'success', duration: 900 })
+        this.showReportDialog = false
+        return
+      }
+      updatedReportInf.id = oldReportInf.id
+      console.group('被修改报备信息')
+      console.log(updatedReportInf)
+      console.groupEnd()
+      updateReport(updatedReportInf).then(data => {
+        this.getList()
+        this.$message({ message: '修改成功', type: 'success', duration: 900 })
+        this.showReportDialog = false
+      }).catch(err => {
+        this.$message({ message: err.message, type: 'error', duration: 900 })
+      })
+    },
     // 重置搜索
     handleResetSearch () {
       this.searchForm = Object.assign({}, this.searchForm, this.page, { username: '' })
       this.getList()
     },
-    hanldeFormatNumberWithInput (val) {
+    hanldeFormatNumberWithInput (val, fieldName) {
       const num = val.match(/^\d+(\.?\d{0,2})/)
-      this.ruleForm.price = num && num[0]
+      this.ruleForm[fieldName] = num && num[0]
     },
     handleFormatNumberAfterBlur () {
       const price = this.ruleForm.price
-      this.ruleForm.price = price.endsWith('.') ? price.replace('.', '') : price
+      this.ruleForm.price = price && price.endsWith('.') ? price.replace('.', '') : price
     },
     // 页码改变
     handlePageNumChange (val) {
@@ -205,20 +329,31 @@ export default {
     handleSearch () {
       this.getList()
     },
+    // 大区改变
     handleRegionChange (regionName) {
-      console.log(regionName)
       this.ruleForm.province = ''
       this.ruleForm.city = ''
-      this.ruleForm.area = ''
+      this.provinceList = []
+      this.cityList = []
       this.provinceList = getProvinceListFromRegionName(regionName)
-      console.log(getProvinceListFromRegionName(regionName))
+    },
+    // 处理省份改变
+    handleProvinceChange (provinceName) {
+      this.ruleForm.city = null
+      this.cityList = null
+      this.cityList = getCityListFromProvinceName(provinceName)
     },
     id () {
-      if (this.userid) return
+      // 创建报备id
+      if (this.newUserId) {
+        this.userid = this.newUserId
+        return
+      }
       createUserId().then(data => {
+        this.newUserId = data
         this.userid = data
       }).catch(err => {
-        console.log('创建用户id失败:' + err.message)
+        console.log('创建报备id失败:' + err.message)
       })
     },
     getList () {
@@ -232,23 +367,26 @@ export default {
     submitForm (ruleForm) {
       this.$refs.ruleForm.validate((valid) => {
         if (valid) {
+          // 是否是修改状态
+          if (this.isUpdateReportState) {
+            this.handleUpdateReport()
+            return
+          }
           // alert('submit!')
           const region = localStorage.getItem('region')
-          userRegister({
-            username: this.ruleForm.username,
-            city: this.ruleForm.city,
-            price: this.ruleForm.price,
-            // contract: this.ruleForm.contract,
-            phone: this.ruleForm.phone,
+          const form = Object.assign({
+            state: 0,
             userType: 1,
-            region: region,
-            id: this.userid,
-            state: 0
-          }).then(data => {
+            region,
+            id: this.userid
+          }, this.ruleForm)
+          // 有关图片字段信息不提交到后台
+          delete form.contractimg
+          addReport(form).then(data => {
             this.getList()
-            this.xinzengdailibaobei = false
-            this.resetRuleForm()
+            this.showReportDialog = false
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
+            this.newUserId = null
           }).catch(err => {
             console.log('注册代理报备失败:' + err.message)
           })
@@ -262,13 +400,15 @@ export default {
         ruleForm[key] = null
       }
       this.ruleForm = ruleForm
+      this.cityList = null
+      this.provinceList = null
     },
     resetForm (formName) {
       this.$refs[formName].resetFields()
     },
     centerDialogVisible1 () {
       this.centerDialogVisible = false
-      this.xinzengdailibaobei = false
+      this.showReportDialog = false
       this.ruleForm = ''
     },
     handleUploadBefore (file) {
@@ -285,6 +425,7 @@ export default {
         this.loading = true
         return
       }
+      this.id()
       this.$message({
         type: 'error',
         message: '上传失败,请重新上传',
@@ -292,9 +433,11 @@ export default {
       })
       return false
     },
-    handleUploadSuccess (res, file) {
-      this.ruleForm.contract = URL.createObjectURL(file.raw)
+    handleUploadSuccess ({ data }, file) {
+      this.ruleForm.contractimg = URL.createObjectURL(file.raw)
+      this.ruleForm.contractimg = data.url
       this.loading = false
+      console.log(data)
     },
     handleUploadError () {
       this.loading = false
@@ -304,31 +447,11 @@ export default {
         duration: 900
       })
     },
-    // 处理省份改变
-    handleProvinceChange (provinceName) {
-      this.ruleForm.city = null
-      this.ruleForm.area = null
-      this.cityList = getCityListFromProvinceName(provinceName)
-    },
-    // 处理城市改变
-    handleCityChange (cityName) {
-      this.ruleForm.area = ''
-      this.areaList = getAreaListFromCityName(cityName)
-      console.log('小地球')
-      console.log(this.areaList)
-    },
-    // 处理城市选择
-    handleCitySelect () {
-      if (this.ruleForm.province) {
-        console.log(this.ruleForm.province)
-        this.cityMap = getCityMap(this.ruleForm.province)
-      }
-    },
-    // 处理地区选择
-    handleAreaSelect () {
-      if (this.ruleForm.city) {
-        this.areaMap = getRegionMap(this.ruleForm.city)
-      }
+    handleExport () {
+      const form = Object.assign({}, this.searchForm)
+      delete form.row
+      delete form.page
+      exportReports(form)
     }
   }
 }
@@ -544,5 +667,8 @@ export default {
         }
       }
     }
+  }
+  .high-light {
+    background: #f0f9eb;
   }
 </style>

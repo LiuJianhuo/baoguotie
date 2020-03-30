@@ -226,6 +226,14 @@ export default {
   created () {
     this.search()
   },
+  mounted () {
+    this.$refs.mask.addEventListener('click', this.handleMaskClick)
+    this.$refs.mask.addEventListener('touchmove', this.handleMaskTouchMove, true)
+  },
+  beforeDestroy () {
+    this.$refs.mask.removeEventListener('click', this.handleMaskClick)
+    window.removeEventListener('popstate', this.handlePopstate)
+  },
   computed: {
     // 网点列表
     netDotList () {
@@ -258,14 +266,29 @@ export default {
       return [...set]
     }
   },
-  mounted () {
-    this.$refs.mask.addEventListener('click', this.handleMaskClick)
-    this.$refs.mask.addEventListener('touchmove', this.handleMaskTouchMove, true)
-  },
-  beforeDestroy () {
-    this.$refs.mask.removeEventListener('click', this.handleMaskClick)
+  watch: {
+    showPicGallary (val) {
+      // 图片预览的时候， 禁止左滑页面后退
+      if (val) {
+        console.log('添加了event')
+        console.log(5)
+        history.pushState(null, null, document.URL)
+        window.addEventListener('popstate', this.handlePopstate)
+      } else {
+        // history.back()
+        window.removeEventListener('popstate', this.handlePopstate)
+      }
+    }
   },
   methods: {
+    handlePopstate (e) {
+      // 图片预览的时候， 禁止左滑页面后退
+      // const val = this.showPicGallary
+      // history.go(1)
+      this.showPicGallary = false
+      console.log(-5)
+      // history.pushState(null, null, document.URL)
+    },
     handleImgScale (src) {
       this.scaleItem = src
       if (src) {
@@ -331,7 +354,6 @@ export default {
     handleShowPicGallary (list, index) {
       this.picGallaryList = list
       this.gallaryActiveItem = index
-      console.log(index)
       // this.showMask = true
       this.showPicGallary = true
       // 滚动的Y距离

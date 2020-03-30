@@ -12,6 +12,34 @@ export default {
 
 <!-- element-ui 公共样式 -->
 <style lang="less">
+.el-table {
+  &.el-table--border {
+    // border: 1px solid #dad9d9;
+    border-radius: 6px;
+  }
+  .el-table__fixed-header-wrapper, .el-table__header-wrapper {
+    padding-bottom: 5px;
+    color: #888;
+    thead {
+      .cell {
+        color: #575353;
+        font-weight: 800;
+      }
+    }
+    .el-table__header {
+      // border: 1px solid #dad9d9;
+      border-top: none;
+    }
+  }
+  .el-table__row {
+    td {
+      border-bottom: 1px solid #ede8e8;
+    }
+  }
+  .el-table__body tr.hover-row>td {
+    background-color: #ededed;
+  }
+}
 .el-image-viewer__canvas {
   .el-image-viewer__img {
     min-width: 300px;
@@ -121,7 +149,7 @@ button {
   margin-top: 15px;
   text-align: right;
 }
-.reset-btn {
+.common-btn, .reset-btn {
   width: 80px;
   height: 53px;
   border: 1px solid #cbcccd;

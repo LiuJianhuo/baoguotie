@@ -10,8 +10,9 @@ const request = (config = { method: 'get', params: {}, query: {}, url: '' }) => 
   return new Promise((resolve, reject) => {
     // console.log(config.url)
     axios(config).then(({ data }) => {
+      // if (data.success || data.code === 1000 || data.code === '1000' || !data.code) {
+      if (data.success) {
       // console.log(data)
-      if (data.success || data.code === 1000 || data.code === '1000' || !data.code) {
         resolve(data.data)
       } else {
         reject(new Error(data.msg))

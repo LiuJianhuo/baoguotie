@@ -13,7 +13,7 @@ Vue.use(VueRouter)
 
 const router = new VueRouter({
   routes: [
-    { path: '/', name: 'enter' },
+    { path: '/', name: 'enter', redirect: device.isMobile ? '/mb/login' : '/login' },
     { path: '/index',
       component: Index,
       name: 'index',
@@ -39,13 +39,14 @@ const router = new VueRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  if (to.name === 'enter') {
-    next({ name: device.isMobile ? 'loginMb' : 'login' })
-    return
-  }
-  next()
-})
+// router.beforeEach((to, from, next) => {
+//   // console.log(to)
+//   // if (to.name === 'enter') {
+//   //   next({ name: device.isMobile ? 'loginMb' : 'login' })
+//   //   return
+//   // }
+//   next()
+// })
 
 // 创建一个理由对象
 export default router
