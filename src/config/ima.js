@@ -21,10 +21,10 @@ const actions = {
   uploadHeadPotrait1: prefix + 'ossAjax/pictures?findex=headpic1', // 上传头像
   uploadHeadPotrait2: prefix + 'ossAjax/pictures?findex=headpic2', // 上传头像
   uploadGoodsPic: prefix + 'ossAjax/uploadGoodimg?findex=goodimg', // 上传商品图片
-  uploadCertificater1: prefix + 'ossAjax/uploadGoodimg?findex=certificater1', // 投放证明
-  uploadCertificater2: prefix + 'ossAjax/uploadGoodimg?findex=certificater2', // 投放证明
-  uploadCertificater3: prefix + 'ossAjax/uploadGoodimg?findex=certificater3', // 投放证明
-  uploadVideo: prefix + 'ossAjax/videoRestUpload?findex=execute' // 上传视频
+  uploadVideo: prefix + 'ossAjax/videoRestUpload?findex=execute', // 上传视频
+  uploadCertificater1: prefix + 'ossAjax/pictures?findex=certificater1', // 投放证明 正面特写
+  uploadCertificater2: prefix + 'ossAjax/pictures?findex=certificater2', // 投放证明 正在粘贴
+  uploadCertificater3: prefix + 'ossAjax/pictures?findex=certificater3' // 投放证明 堆积排列
 }
 
 export default actions

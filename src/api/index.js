@@ -24,6 +24,13 @@ export function getPicList (params) {
     params
   })
 }
+export function getReportDetail (params) {
+  return request({
+    method: 'get',
+    url: 'admin/user/getByIds',
+    params
+  })
+}
 // 登录
 export function login (params) {
   return request({
@@ -87,5 +94,9 @@ export function exportReports (params) {
   const temp = Object.keys(params).map(key => {
     return `${key}=${params[key]}`
   })
-  window.location.href = baseUrl + 'admin/user/ExcelDownloads?' + temp.join('&')
+  const url = baseUrl + 'admin/user/ExcelDownloads?' + temp.join('&')
+  console.group('导出')
+  console.log(url)
+  console.groupEnd()
+  window.open(url)
 }

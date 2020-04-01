@@ -4,6 +4,7 @@
       <input class="input" v-model="searchForm.username" placeholder="请输入要搜索的客户名称">
       <button class="btn-1" @click="handleSearch">搜索</button>
       <button class="btn reset-btn" @click="handleResetSearch">重置</button>
+      <button class="btn common-btn export-btn" @click="handleExport" v-if="$user.getRegion() === 'null'">导出</button>
       <button class="btn-2" @click="handleAddReport">新增执行报备</button>
     </div>
     <div class="center">
@@ -59,7 +60,12 @@
           width="120"
           align="center">
           <template slot-scope="scope">
+            <div class="title" v-if="!scope.row.headpic"
+              @click="getPringLogisticPics({ belongsRow: scope.$index, id: scope.row.id })">
+                点击查看图片
+            </div>
             <el-image
+              v-else
               style="width: 120px; height: 63px"
               :src="scope.row.headpic"
               :preview-src-list="[scope.row.headpic, scope.row.headpic1]">
@@ -71,11 +77,16 @@
           width="120"
           align="center">
           <template slot-scope="scope">
+            <div class="title" v-if="!scope.row.contractimg"
+              @click="handleLoadPicsForTableList({ findex: 'contract', fieldName: 'contractimg', belongsRow: scope.$index, id: scope.row.id })">
+                点击查看图片
+            </div>
             <el-image
-              @click="handleGetPicList('contract', scope.$index, scope.row)"
+              v-else
+              @click="handlePreviewCertificaterPic(scope.$index, scope.row)"
               style="width: 120px; height: 63px"
-              :src="(scope.row.contractimg && typeof scope.row.contractimg === 'object') ? scope.row.contractimg[0] : scope.row.contractimg"
-              :preview-src-list="(scope.row.contractimg && typeof scope.row.contractimg === 'object') ? scope.row.contractimg : [scope.row.contractimg]">
+              :src="(scope.row.contractimg && Array.isArray(scope.row.contractimg)) ? scope.row.contractimg[0] : scope.row.contractimg"
+              :preview-src-list="(scope.row.contractimg && Array.isArray(scope.row.contractimg)) ? scope.row.contractimg : [scope.row.contractimg]">
             </el-image>
           </template>
         </el-table-column>
@@ -84,9 +95,15 @@
           width="120"
           align="center">
           <template slot-scope="scope">
-            <video v-if="scope.row.executeimg"
+            <div class="title" v-if="!scope.row.executeimg"
+              @click="handleLoadPicsForTableList({ findex: 'execute', fieldName: 'executeimg', belongsRow: scope.$index, id: scope.row.id })">
+                点击加载视频
+            </div>
+            <video
+              v-else
               style="width: 120px; height: 63px"
-              :src="scope.row.executeimg" controls>
+              :src="scope.row.executeimg"
+              controls>
             </video>
           </template>
         </el-table-column>
@@ -162,6 +179,8 @@
                 :action="actions.uploadHeadPotrait + '&bindId=' + userid"
                 :show-file-list="false"
                 accept="image/*"
+                ref="print"
+                :on-change="file => handleUploadChange('print', file)"
                 :on-error="err => handleUplaodError('print', file)"
                 :on-success="(res, file) => handleUploadSuccess('print', file, res)"
                 :before-upload="(file) => handleUploadBefore('print', file)">
@@ -170,6 +189,7 @@
                 <div class="loading" v-loading="loading.print" element-loading-text="拼命上传中"></div>
               </el-upload>
               <el-upload
+                ref="logistics"
                 class="avatar-uploader wuliu"
                 :action="actions.uploadHeadPotrait1 + '&bindId=' + userid"
                 :show-file-list="false"
@@ -192,10 +212,9 @@
               :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
               :on-success="(res, file) => handleUploadSuccess('certificater1', file, res)"
               :on-remove="handleRemove"
-              multiple
               accept="image/*"
               :limit="3"
-              :file-list="uploadUrls.certificater1"
+              :file-list="uploadedImgs.certificater1"
               list-type="picture-card"
               :before-upload="handleUploadCerticaterBefore">
               <i class="el-icon-plus append-word front-pic" ></i>
@@ -206,10 +225,10 @@
             <!-- 3-10 -->
             <el-upload
               ref="certificater2"
-              :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
+              :file-list="uploadedImgs.certificater2"
+              :action="actions.uploadCertificater2 + '&bindId=' + userid"
               :on-success="(res, file) => handleUploadSuccess('certificater2', file, res)"
               :on-remove="handleRemove"
-              multiple
               accept="image/*"
               :limit="10"
               list-type="picture-card"
@@ -222,10 +241,10 @@
             <!-- 3-10 -->
             <el-upload
               ref="certificater3"
-              :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
+              :file-list="uploadedImgs.certificater3"
+              :action="actions.uploadCertificater3 + '&bindId=' + userid"
               :on-success="(res, file) => handleUploadSuccess('certificater3', file, res)"
               :on-remove="handleRemove"
-              multiple
               accept="image/*"
               :limit="10"
               list-type="picture-card"
@@ -238,6 +257,7 @@
           <el-form-item prop="video">
             <div class="hbdfbvdf">
               <el-upload
+                ref="video"
                 class="avatar-uploader"
                 accept="video/mp4,audio/mp4"
                 :action="actions.uploadVideo + '&bindId=' + userid"
@@ -266,7 +286,7 @@ import actions from '../../config/ima'
 import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName } from '@/components/uitl/jsAddress.js'
 
 import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
-import { deletePic, getPicList, createUserId, getUserList, addReport, updateReport } from '@/api/index'
+import { deletePic, getPicList, createUserId, getUserList, addReport, updateReport, exportReports, getReportDetail } from '@/api/index'
 
 export default {
   data () {
@@ -312,6 +332,8 @@ export default {
       cityMap: null, // 城市
       centerDialogVisible: false,
       showReportDialog: false,
+      isSubmitStatus: false, // 是否是提交状态
+      submitSuccess: false, // 是否提交成功
       uploadUrls: {
         logistics: '', // 印刷物流
         print: '', // 印刷物流
@@ -319,6 +341,19 @@ export default {
         certificater1: [],
         certificater2: [],
         certificater3: []
+      },
+      uploadedImgs: { // 已上传的，用户修改显示
+        certificater1: [],
+        certificater2: [],
+        certificater3: []
+      },
+      newUploadedFiles: { // 上传的文件
+        certificater1: [],
+        certificater2: [],
+        certificater3: [],
+        logistics: [],
+        print: [],
+        video: []
       },
       loading: { // 用于上传图片是否显示上传中，动画效果
         logistics: false,
@@ -388,10 +423,21 @@ export default {
       }
       // 关闭时，若果是修改状态的话那就重置编辑框内的数据
       if (!val) {
-        if (this.isUpdateReportState) {
-          this.isUpdateReportState = false
-          this.clearReportDialogFields()
+        if (!this.submitSuccess) {
+          // 添加和修改操作，移除未提交成功到已经所上传的文件
+          this.removeUploadedFilesOfUnsubmit()
         }
+        if (this.isUpdateReportState) {
+          // 修改的没有提交成功，则删除掉
+          if (!this.submitSuccess) {
+            console.log(this.submitSuccess)
+            this.restorePics()
+          }
+          // 不是提交触发的则，把上传的给删除掉
+          this.clearReportDialogFields()
+          this.isUpdateReportState = false
+        }
+        this.submitSuccess = false
       }
     }
   },
@@ -407,6 +453,39 @@ export default {
         this.resetRuleForm()
         this.$refs.ruleForm.resetFields()
       }
+      // this.removeUploadedFilesOfUnsubmit()
+    },
+    // 未提交移除所上传的文件，
+    removeUploadedFilesOfUnsubmit () {
+      const newUploadedFiles = this.newUploadedFiles
+      const $refs = this.$refs
+      Object.keys(newUploadedFiles).forEach(key => {
+        console.log('正在移除文件:' + key)
+        if ($refs[key]) $refs[key].clearFiles()
+        newUploadedFiles[key].forEach(file => {
+          console.log('正在移除文件:' + key, ',file:' + file.id)
+          this.handleDeletePic(file.id)
+        })
+      })
+      this.uploadUrls.logistics = ''
+      this.uploadUrls.print = ''
+      this.uploadUrls.video = ''
+    },
+    restorePics () {
+      // const oldReportInf = this.oldReportInf
+      // const updatedReportInf = Object.assign({
+      //   headpic: oldReportInf.headpic,
+      //   headpic1: oldReportInf.headpic1,
+      //   executeimg: oldReportInf.executeimg
+      // })
+      // console.log('restore')
+      // updatedReportInf.id = oldReportInf.id
+      // console.log(updatedReportInf)
+      // updateReport(updatedReportInf).then(data => {
+      //   this.getList()
+      // }).catch(err => {
+      //   this.$message({ message: err.message, type: 'error', duration: 900 })
+      // })
     },
     // 打开编辑报备弹窗
     handleOpenEditReportDialog (row, index) {
@@ -414,38 +493,39 @@ export default {
       this.clearReportDialogFields()
       this.isUpdateReportState = true
       // 存一份原报备数据信息和拷贝一份报备数据，用于展现和修改
-      this.oldReportInf = row
+      // this.oldReportInf = row
       this.ruleForm = Object.keys(this.ruleForm).reduce((result, key) => {
         result[key] = row[key]
         return result
       }, {})
-      this.userid = row.id
-      this.uploadUrls.print = row.headpic
-      this.uploadUrls.logistics = row.headpic1
-      this.uploadUrls.video = row.executeimg
-      this.handleGetPicList('contract', index, row, imgList => {
-        this.uploadUrls.certificater1 = imgList.map((item, index) => {
-          return {
-            name: index,
-            url: item
-          }
-        })
+      const $refs = this.$refs
+      Object.keys(this.newUploadedFiles).forEach(key => {
+        if ($refs[key]) $refs[key].clearFiles()
+        this.newUploadedFiles[key] = []
       })
-      // this.uploadUrls = Object.keys(this.uploadUrls).reduce((result, key) => {
-      //   result[key] = row[key]
-      //   return result
-      // }, {})
-      // uploadUrls: {
-      //   logistics: '', // 印刷物流
-      //   print: '', // 印刷物流
-      //   video: '',
-      //   certificater1: [],
-      //   certificater2: [],
-      //   certificater3: []
-      // },
+      this.userid = row.id
+      this.getReportDetail(row.id, data => {
+        this.oldReportInf = data
+        this.uploadUrls.print = data.headpic
+        this.uploadUrls.logistics = data.headpic1
+        this.uploadUrls.video = data.executeimg
+      })
+      this.getCertificaterPics(index, row)
       setTimeout(() => {
         this.showReportDialog = true
       }, 200)
+    },
+    getReportDetail (id, cb) {
+      getReportDetail({
+        id
+      }).then(data => {
+        console.log(data)
+        if (typeof cb === 'function') {
+          cb(data)
+        }
+      }).catch(err => {
+        console.log('失败' + err.message)
+      })
     },
     // 提交修改报备
     handleUpdateReport () {
@@ -461,6 +541,8 @@ export default {
       }, {})
       if (Object.keys(updatedReportInf).length < 1) {
         this.$message({ message: '修改成功', type: 'success', duration: 900 })
+        this.handleUpdateReportSuccess()
+        this.submitSuccess = true
         this.showReportDialog = false
         return
       }
@@ -469,11 +551,36 @@ export default {
       console.log(updatedReportInf)
       console.groupEnd()
       updateReport(updatedReportInf).then(data => {
-        this.getList()
         this.$message({ message: '修改成功', type: 'success', duration: 900 })
+        this.handleUpdateReportSuccess()
+        this.getList()
+        this.submitSuccess = true // 提交成功
         this.showReportDialog = false
       }).catch(err => {
         this.$message({ message: err.message, type: 'error', duration: 900 })
+      })
+    },
+    handleUpdateReportSuccess () {
+      // 删除图片
+      const { certificater1, certificater2, certificater3 } = this.uploadedImgs
+      console.log('删除图片')
+      console.log(certificater1)
+      console.log(certificater2)
+      console.log(certificater3)
+      certificater1.forEach(item => {
+        if (item.status === 'delete') {
+          this.handleDeletePic(item.id)
+        }
+      })
+      certificater2.forEach(item => {
+        if (item.status === 'delete') {
+          this.handleDeletePic(item.id)
+        }
+      })
+      certificater3.forEach(item => {
+        if (item.status === 'delete') {
+          this.handleDeletePic(item.id)
+        }
       })
     },
     // 页码改变
@@ -490,18 +597,97 @@ export default {
       this.searchForm = Object.assign({}, this.searchForm, this.page, { username: '' })
       this.getList()
     },
-    handleGetPicList (findex, index, { id, contractimg }, cb) {
-      if (!contractimg) return
-      if (typeof contractimg === 'object') return
+    // 获取投放证明图片
+    getCertificaterPics (index, row) {
+      // 正面特写 certificati 正在粘贴 堆积排列
+      this.handleGetPicList('contract', index, row, imgs => {
+        console.log('contract')
+        console.log(imgs)
+        this.uploadedImgs.certificater1 = imgs
+      })
+      this.handleGetPicList('certificater2', index, row, imgs => {
+        console.log('certificater2')
+        console.log(imgs)
+        this.uploadedImgs.certificater2 = imgs
+      })
+      this.handleGetPicList('certificater3', index, row, imgs => {
+        console.log('certificater3')
+        console.log(imgs)
+        this.uploadedImgs.certificater3 = imgs
+      })
+    },
+    handlePreviewCertificaterPic (index, row) {
+      // 正面特写 certificati 正在粘贴 堆积排列
+      let temp = []
+      this.handleGetPicList('contract', index, row, imgs => {
+        console.log('contract')
+        console.log(imgs)
+        temp = [...temp, ...imgs.map(({ url }) => {
+          return url
+        })]
+        this.list[index].contractimg = temp
+      })
+      this.handleGetPicList('certificater2', index, row, imgs => {
+        console.log('certificater2')
+        console.log(imgs)
+        temp = [...temp, ...imgs.map(({ url }) => {
+          return url
+        })]
+        this.list[index].contractimg = temp
+      })
+      this.handleGetPicList('certificater3', index, row, imgs => {
+        console.log('certificater3')
+        console.log(imgs)
+        temp = [...temp, ...imgs.map(({ url }) => {
+          return url
+        })]
+        this.list[index].contractimg = temp
+      })
+    },
+    handleLoadPicsForTableList ({ findex, belongsRow, fieldName, id }) {
+      fieldName = fieldName || findex
       getPicList({
         findex,
         bindId: id
       }).then(data => {
+        console.log(`加载成功findex:${findex}, 字段：${fieldName}, 行: ${belongsRow},id：${id}`)
+        console.log(data)
+        let temp = ''
+        if (data && data.length > 0) {
+          temp = data.map(file => file.url)
+        }
+        console.log(temp)
+        this.list[belongsRow][fieldName] = temp
+      }).catch(err => {
+        // console.log('加载失败findex', findex, '字段：', fieldName, ''+ id)
+        console.log(`加载失败findex:${findex}, 字段：${fieldName}, 行: ${belongsRow},id：${id},${err.message}`)
+      })
+    },
+    handleGetPicList (findex, index, { id, contractimg }, cb) {
+      // if (!contractimg && !this.isUpdateReportState) return
+      // if (typeof contractimg === 'object' && !this.isUpdateReportState) return
+      getPicList({
+        findex,
+        bindId: id
+      }).then(data => {
+        console.log(data)
         const imgList = data && data.map(({ url }) => {
           return url
         })
-        this.list[index].contractimg = imgList
-        if (typeof cb === 'function') cb(imgList)
+        console.log(imgList)
+        if (!cb) this.list[index].contractimg = imgList
+        if (typeof cb === 'function') {
+          console.log('cb')
+          const imgs = data && data.map(item => {
+            return {
+              url: item.url,
+              id: item.id,
+              name: item.fileName,
+              status: 'exist'
+            }
+          })
+          cb(imgs || [])
+        }
       }).catch(err => {
         console.log(err)
       })
@@ -518,7 +704,8 @@ export default {
       })
     },
     // 上传前
-    handleUploadBefore (type, file) {
+    handleupdate (type, file) {
+      console.log('uploade')
       if (type !== 'video' && this.$fileController.imgSizeTooLarge(file)) {
         this.$message({
           type: 'error',
@@ -541,6 +728,7 @@ export default {
     },
     // 上传成功
     handleUploadSuccess (type, file, res) {
+      file.id = res.data.id
       console.log('====')
       // console.log(file)
       // console.log(this.uploadUrls[type])
@@ -551,8 +739,13 @@ export default {
       // certificater1: '',
       //   certificater2: '',
       //   certificater3: ''
+      if (type) {
+        this.newUploadedFiles[type].push(file)
+      }
       if (type && type.indexOf('certificater') > -1) {
-        this.uploadUrls[type].push({ uid: file.uid, fileId: res.data.id })
+        const data = res.data
+        this.uploadUrls[type].push({ uid: file.uid, id: data.id })
+        // console.log(type)
       } else {
         this.uploadUrls[type] = URL.createObjectURL(file.raw)
       }
@@ -561,13 +754,26 @@ export default {
       // 上传失败，隐藏上传中提示
       if (this.loading[type]) this.loading[type] = false
     },
-    handleRemove ({ uid }, fileList) {
+    handleDeletePic (fileId) {
+      deletePic(fileId).then(data => {
+        console.log('删除成功')
+      }).catch(Err => {
+        console.log('删除成功')
+      })
+    },
+    handleRemove (file, fileList) {
+      const { uid, status } = file
+      if (status === 'exist') {
+        file.status = 'delete'
+        return
+      }
       const { certificater3, certificater1, certificater2 } = this.uploadUrls
       const list = [...certificater3, ...certificater1, ...certificater2]
+      console.log(list)
       list.forEach(item => {
         if (item.uid === uid) {
-          console.log(item.fileId)
-          deletePic(item.fileId).then(data => {
+          console.log(item.id)
+          deletePic(item.id).then(data => {
             console.log('删除成功')
           }).catch(Err => {
             this.$notify('删除失败')
@@ -595,44 +801,77 @@ export default {
       })
       return false
     },
+    getPringLogisticPics ({ belongsRow, id }) {
+      getReportDetail({
+        id
+      }).then(data => {
+        this.list[belongsRow].headpic1 = data.headpic1
+        this.list[belongsRow].headpic = data.headpic
+      }).catch(err => {
+        console.log('失败' + err.message)
+      })
+    },
     id () {
       // 创建报备id
       if (this.newUserId) {
+        console.log('复用缓存id' + this.newUserId)
         this.userid = this.newUserId
         return
       }
-      console.log('新建id')
       createUserId().then(data => {
         this.newUserId = data
+        console.log('创建id' + data)
         this.userid = data
       }).catch(err => {
         console.log('创建报备id失败:' + err.message)
       })
     },
     submitForm (formName) {
-      const { certificater3, certificater1, certificater2 } = this.uploadUrls
-      if (certificater1.length < 1) {
+      const uploadUrls = this.uploadUrls
+      // const uploadedImgs = this.uploadedImgs
+      let certificater1Len = !uploadUrls.certificater1 ? 0 : uploadUrls.certificater1.length
+      let certificater2Len = !uploadUrls.certificater2 ? 0 : uploadUrls.certificater2.length
+      let certificater3Len = !uploadUrls.certificater3 ? 0 : uploadUrls.certificater3.length
+      if (this.isUpdateReportState) {
+        const { certificater1, certificater2, certificater3 } = this.uploadedImgs
+        if (certificater1) {
+          certificater1.forEach(item => {
+            if (item.status !== 'delete') ++certificater1Len
+          })
+          certificater2.forEach(item => {
+            if (item.status !== 'delete') ++certificater2Len
+          })
+          certificater3.forEach(item => {
+            if (item.status !== 'delete') ++certificater3Len
+          })
+        }
+      }
+      console.log('======lengh')
+      console.log(certificater1Len)
+      console.log(certificater2Len)
+      console.log(certificater3Len)
+      // if (certificater2Len) return
+      if (certificater1Len < 1) {
         this.$message({
           message: '请先上传投放证明正面特写（1-3张）',
           type: 'error'
         })
         return
       }
-      if (certificater2.length < 3) {
+      if (certificater2Len < 3) {
         this.$message({
           message: '请上传投放证明正在粘贴（3-10张）',
           type: 'error'
         })
         return
       }
-      if (certificater3.length < 3) {
+      if (certificater3Len < 3) {
         this.$message({
           message: '请上传投放证明堆积排列（3-10张）',
           type: 'error'
         })
         return
       }
-
       this.$refs[formName].validate((valid) => {
         const region = localStorage.getItem('region')
         if (valid) {
@@ -651,11 +890,35 @@ export default {
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
             this.getList()
             this.showReportDialog = false
+            this.submitSuccess = true
+            this.clearReportDialogFields()
           }).catch(err => {
             this.$message({ message: err.message, type: 'error', duration: 900 })
           })
         }
       })
+    },
+    handleUploadBefore (type, file) {
+      if (this.$fileController.imgSizeTooLarge(file)) {
+        this.$message({
+          type: 'error',
+          message: `图片大小不能超过${this.$fileController.IMG_SIZE}mb`,
+          duration: 900
+        })
+        return false
+      }
+      if (this.userid) {
+        this.loading[type] = true
+        console.log(type)
+        console.log(this.loading[type])
+        return
+      }
+      this.$message({
+        typ: 'error',
+        message: '上传失败,请重新上传',
+        duration: 900
+      })
+      return false
     },
     // 重置所填写的信息
     resetRuleForm () {
@@ -706,13 +969,33 @@ export default {
         this.cityMap = getCityMap(this.ruleForm.province)
       }
     },
+    handleUploadChange (type, file) {
+      console.log(file)
+      if (this.isSubmitStatus) return
+      this.uploadUrls[type] = URL.createObjectURL(file.raw)
+    },
     // 处理地区选择
     handleAreaSelect () {
       if (this.ruleForm.city) {
         this.areaMap = getRegionMap(this.ruleForm.city)
       }
+    },
+    handleExport () {
+      const form = Object.assign({}, this.searchForm)
+      delete form.row
+      delete form.page
+      exportReports(form)
+    },
+    // 加载视频
+    handleLoadVideo ({ currentTarget }) {
+      console.log('currentTarget')
+      const src = currentTarget.dataset.src
+      const videoNode = currentTarget.querySelector('video')
+      const titleNode = currentTarget.querySelector('.title')
+      titleNode.style.display = 'none'
+      videoNode.src = src
+      videoNode.style.display = 'block'
     }
-
   }
 }
 </script>

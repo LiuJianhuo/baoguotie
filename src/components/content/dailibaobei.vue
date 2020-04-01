@@ -4,7 +4,7 @@
       <input class="input" v-model="searchForm.username" placeholder="请输入要搜索的代理名称">
       <button class="btn-1" @click="handleSearch">搜索</button>
       <button class="btn reset-btn" @click="handleResetSearch">重置</button>
-      <button class="btn common-btn export-btn" @click="handleExport">导出</button>
+      <button class="btn common-btn export-btn" @click="handleExport" v-if="$user.getRegion() === 'null'">导出</button>
       <button class="btn-2" @click="handleAddReport">新增代理报备</button>
     </div>
     <div class="center">
@@ -52,10 +52,16 @@
           width="120"
           align="center">
           <template slot-scope="scope">
+            <div class="title" v-if="!scope.row.contractimg"
+              @click="handleLoadPicsForTableList({ findex: 'contract', fieldName: 'contractimg', belongsRow: scope.$index, id: scope.row.id })">
+                点击查看图片
+            </div>
             <el-image
+              v-else
+              @click="handlePreviewPic('contract', scope.$index, scope.row)"
               style="width: 120px; height: 63px"
-              :src="scope.row.contractimg"
-              :preview-src-list="[scope.row.contractimg]">
+              :src="Array.isArray(scope.row.contractimg) ? scope.row.contractimg[0] : scope.row.contractimg"
+              :preview-src-list="Array.isArray(scope.row.contractimg) ? scope.row.contractimg : [scope.row.contractimg]">
             </el-image>
           </template>
         </el-table-column>
@@ -69,7 +75,7 @@
           align="center"
           width="100">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="handleUpdate(scope.row)">编辑</el-button>
+            <el-button type="text" size="small" @click="handleOpenEditDialog(scope.row)">编辑</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -115,19 +121,19 @@
             <el-input v-model="ruleForm.firstNeedPay" placeholder="请输入首笔预付款" v-pure-number></el-input>
           </el-form-item>
             <div><span class="c-red">*</span> 合同影印件</div>
-            <div class="clearfix knjsovosv">
-              <el-form-item prop="contractimg">
+            <div class="clearfix knjsovosv multiple-upload-box">
+              <el-form-item>
                 <el-upload
-                  class="avatar-uploader"
+                  ref="contractimgUploader"
                   :action="actions.uploadHeadPotrait3 + '&bindId=' + userid"
-                  :show-file-list="false"
+                  :on-success="(res, file, fileList) => handleUploadSuccess('contractimg', res, file, fileList)"
+                  :on-remove="file => handleUploadRemove('contractimg', file)"
                   accept="image/*"
-                  :on-success="handleUploadSuccess"
-                  :on-error="handleUploadError"
+                  :limit="10"
+                  :file-list="oldUploadedImgs.contractimg"
+                  list-type="picture-card"
                   :before-upload="handleUploadBefore">
-                  <img v-if="ruleForm.contractimg" :src="ruleForm.contractimg" class="avatar">
-                  <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-                  <div class="loading" v-loading="loading" element-loading-text="拼命上传中"></div>
+                  <i class="el-icon-plus append-word front-pic" ></i>
                 </el-upload>
               </el-form-item>
             </div>
@@ -135,16 +141,6 @@
             <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
           </el-form-item>
         </el-form>
-        <!-- <el-dialog
-          title=""
-          :visible.sync="centerDialogVisible"
-          width="50%"
-          append-to-body>
-          <div class="dbsiv">提交成功</div>
-          <span slot="footer" class="dialog-footer">
-            <div class="beivbibvsifv" type="primary" @click="centerDialogVisible1">返 回</div>
-          </span>
-        </el-dialog> -->
       </div>
     </el-dialog>
   </div>
@@ -153,7 +149,7 @@
 <script>
 import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName } from '@/components/uitl/jsAddress.js'
 import actions from '../../config/ima'
-import { createUserId, getUserList, addReport, updateReport, exportReports } from '@/api'
+import { createUserId, getUserList, addReport, updateReport, exportReports, deletePic, getPicList } from '@/api'
 export default {
   data () {
     var checkPhone = (rule, value, callback) => {
@@ -193,6 +189,16 @@ export default {
         promisePrice: '',
         firstNeedPay: ''
       },
+      uploadedImgs: { // 已经上传到服务器的的图片
+        contractimg: []
+      },
+      oldUploadedImgs: { // 早已上传到服务的图片
+        contractimg: []
+      },
+      newUploadedImgs: { // 最新的图片已经上传到服务器
+        contractimg: []
+      },
+      willUploadContractImgIds: [], // 带修改的图片id
       oldReportInf: { // 旧的报备信息，用于报备编辑后前后对比，将修改的信息进行提交
       },
       searchForm: {
@@ -246,15 +252,43 @@ export default {
       }
       // 关闭时，若果是修改状态的话那就重置编辑框内的数据
       if (!val) {
+        if (!this.submitSuccess) {
+          this.restorePics()
+        }
         if (this.isUpdateReportState) {
           this.isUpdateReportState = false
           this.clearReportDialogFields()
+        } else {
+          this.clearNewUploadedImgs()
         }
       }
     }
   },
   methods: {
-    handleUpdate (row) {
+    handlePreviewPic (type, index, row) {
+      this.handleGetPicList(type, row, imgs => {
+        this.list[index].contractimg = imgs.map(item => {
+          return item.url
+        })
+      })
+    },
+    // 恢复图片
+    restorePics () {
+      console.log(this.newUploadedImgs.contractimg)
+      this.newUploadedImgs.contractimg.forEach(item => {
+        console.log('修改---删除')
+        console.log(item.id)
+        this.deletePic(item.id)
+      })
+    },
+    deletePic (fileId) {
+      deletePic(fileId).then(data => {
+        console.log('删除成功')
+      }).catch(Err => {
+        console.log('删除成功')
+      })
+    },
+    handleOpenEditDialog (row) {
       this.clearReportDialogFields()
       this.isUpdateReportState = true
       this.oldReportInf = row // 存一份原报备数据信息
@@ -265,6 +299,30 @@ export default {
       }, {})
       this.userid = row.id
       this.showReportDialog = true
+      this.handleGetPicList('contract', row, imgs => {
+        console.log(imgs)
+        this.oldUploadedImgs['contractimg'] = imgs
+      })
+    },
+    handleGetPicList (findex, { id }, cb) {
+      getPicList({
+        findex,
+        bindId: id
+      }).then(data => {
+        if (typeof cb === 'function') {
+          const imgs = data && data.map(item => {
+            return {
+              url: item.url,
+              id: item.id,
+              name: item.fileName,
+              status: 'exist'
+            }
+          })
+          cb(imgs || [])
+        }
+      }).catch(err => {
+        console.log(err)
+      })
     },
     // 新增报备
     handleAddReport () {
@@ -272,12 +330,45 @@ export default {
       this.id()
       this.showReportDialog = true
     },
+    handleLoadPicsForTableList ({ findex, belongsRow, fieldName, id }) {
+      fieldName = fieldName || findex
+      getPicList({
+        findex,
+        bindId: id
+      }).then(data => {
+        console.log(`加载成功findex:${findex}, 字段：${fieldName}, 行: ${belongsRow},id：${id}`)
+        console.log(data)
+        let temp = ''
+        if (data && data.length > 0) {
+          temp = data.map(file => file.url)
+        }
+        console.log(temp)
+        this.list[belongsRow][fieldName] = temp
+      }).catch(err => {
+        // console.log('加载失败findex', findex, '字段：', fieldName, ''+ id)
+        console.log(`加载失败findex:${findex}, 字段：${fieldName}, 行: ${belongsRow},id：${id},${err.message}`)
+      })
+    },
+    // 请客新上传的
+    clearNewUploadedImgs () {
+      this.newUploadedImgs = Object.keys(this.newUploadedImgs).reduce((result, key) => {
+        result[key] = []
+        console.log(key)
+        return result
+      }, {})
+      if (this.$refs.contractimgUploader) {
+        this.$refs.contractimgUploader.clearFiles()
+      }
+    },
     // 清除报备弹窗里字段数据
     clearReportDialogFields () {
       if (this.$refs.ruleForm) {
         this.resetRuleForm()
         this.$refs.ruleForm.resetFields()
+        this.$refs.contractimgUploader.clearFiles()
       }
+      this.clearNewUploadedImgs()
+      console.log(this.newUploadedImgs)
     },
     // 提交修改报备
     handleUpdateReport () {
@@ -291,8 +382,16 @@ export default {
         }
         return result
       }, {})
+      console.log(oldReportInf.contractimg)
+      console.log(newReportInf.contractimg)
+      // if (this.ruleForm.contractimg !== this.oldReportInf.contractimg) {
+      //   updatedReportInf.contractimg = this.ruleForm.contractimg
+      // }
+      this.handleDeletePicsAfterUpdateSuccess()
       if (Object.keys(updatedReportInf).length < 1) {
         this.$message({ message: '修改成功', type: 'success', duration: 900 })
+        this.getList()
+        this.submitSuccess = true
         this.showReportDialog = false
         return
       }
@@ -301,6 +400,7 @@ export default {
       console.log(updatedReportInf)
       console.groupEnd()
       updateReport(updatedReportInf).then(data => {
+        this.submitSuccess = true
         this.getList()
         this.$message({ message: '修改成功', type: 'success', duration: 900 })
         this.showReportDialog = false
@@ -346,11 +446,13 @@ export default {
     id () {
       // 创建报备id
       if (this.newUserId) {
+        console.log('复用缓存id' + this.newUserId)
         this.userid = this.newUserId
         return
       }
       createUserId().then(data => {
         this.newUserId = data
+        console.log('创建id' + data)
         this.userid = data
       }).catch(err => {
         console.log('创建报备id失败:' + err.message)
@@ -365,6 +467,26 @@ export default {
       })
     },
     submitForm (ruleForm) {
+      // 合同影印件为十张
+      let contractimgLen = 0
+      const newUploadedContractimg = this.newUploadedImgs.contractimg
+      if (this.isUpdateReportState) {
+        const oldUploadedContractimg = this.oldUploadedImgs.contractimg
+        oldUploadedContractimg.forEach(item => {
+          if (item.status !== 'remove') {
+            contractimgLen++
+          }
+        })
+      }
+      newUploadedContractimg.forEach(item => {
+        if (item.status === 'success') {
+          contractimgLen++
+        }
+      })
+      if (contractimgLen < 1) {
+        this.$message({ message: '请上传合同影印件', type: 'error', duration: 900 })
+        return
+      }
       this.$refs.ruleForm.validate((valid) => {
         if (valid) {
           // 是否是修改状态
@@ -385,11 +507,30 @@ export default {
           addReport(form).then(data => {
             this.getList()
             this.showReportDialog = false
+            this.submitSuccess = true
             this.$message({ message: '提交成功', type: 'success', duration: 900 })
             this.newUserId = null
+            console.log('dailebao')
+            this.clearReportDialogFields()
           }).catch(err => {
             console.log('注册代理报备失败:' + err.message)
           })
+        }
+      })
+    },
+    handleDeletePicsAfterUpdateSuccess () {
+      const newUploadedContractimg = this.newUploadedImgs.contractimg
+      const oldUploadedContractimg = this.oldUploadedImgs.contractimg
+      newUploadedContractimg.forEach(item => {
+        if (item.status === 'remove') {
+          console.log('删除新的')
+          this.deletePic(item.id)
+        }
+      })
+      oldUploadedContractimg.forEach(item => {
+        if (item.status === 'remove') {
+          console.log('删除旧的的')
+          this.deletePic(item.id)
         }
       })
     },
@@ -410,6 +551,15 @@ export default {
       this.centerDialogVisible = false
       this.showReportDialog = false
       this.ruleForm = ''
+    },
+    handleUploadRemove (type, file) {
+      if (this.isUpdateReportState) {
+        file.status = 'remove'
+        // if (file.status === 'exist') {
+        // }
+        return
+      }
+      this.doAddReportForUploadRemove(type, file)
     },
     handleUploadBefore (file) {
       if (this.$fileController.imgSizeTooLarge(file)) {
@@ -433,11 +583,31 @@ export default {
       })
       return false
     },
-    handleUploadSuccess ({ data }, file) {
-      this.ruleForm.contractimg = URL.createObjectURL(file.raw)
-      this.ruleForm.contractimg = data.url
-      this.loading = false
+    handleUploadSuccess (type, { data }, file, fileList) {
+      console.log('=========upload success')
       console.log(data)
+      console.log(data.url)
+      console.log(file)
+      console.log('end')
+      file.id = data.id
+      if (this.isUpdateReportState) {
+        this.newUploadedImgs.contractimg.push(file)
+        console.log(this.newUploadedImgs)
+        return
+      }
+      // 添加报备
+      this.doAddReportAfterUploadSuccess(type, file)
+      // this.loading = false
+    },
+    // 移除上传的文件 处理添加报备 data上传返回的字段
+    doAddReportForUploadRemove (type, file) {
+      file.status = 'delete'
+      this.deletePic(file.id)
+    },
+    // 上传成功 处理添加报备 data上传返回的字段
+    doAddReportAfterUploadSuccess (type, file) {
+      this.newUploadedImgs[type].push(file)
+      // console.log(this.uploadedImgs[type])
     },
     handleUploadError () {
       this.loading = false
@@ -523,6 +693,23 @@ export default {
 .el-upload {
   width: 130px;
   height: 130px;
+}
+@imgW: 80px;
+.multiple-upload-box {
+  margin-top: 5px;
+  .el-form-item__content {
+    text-align: left;
+  }
+  .el-upload--picture-card {
+    width: @imgW;
+    height: @imgW;
+    line-height: @imgW;
+  }
+  .el-upload-list--picture-card .el-upload-list__item {
+    width: @imgW;
+    height: @imgW;
+    line-height: @imgW;
+  }
 }
 </style>
 

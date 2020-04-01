@@ -24,6 +24,11 @@ Vue.use(ImagePreview)
 // })
 Vue.prototype.$axios = axios
 Vue.prototype.$fileController = fileController
+Vue.prototype.$user = {
+  getRegion: () => {
+    return localStorage.getItem('region')
+  }
+}
 if (process.env.NODE_ENV === 'production') { axios.defaults.baseURL = 'http://139.196.178.156:8080/' }
 
 // 关闭生产环境的提示消息

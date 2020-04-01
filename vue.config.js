@@ -1,5 +1,6 @@
 // const baseURL = 'https://ht.hongrendaihuo.com:8080/'
 const baseURL = 'http://139.196.178.156:8080/'
+// const baseURL = 'http://10.1.202.150:8080/'
 module.exports = {
   devServer: {
     proxy: {

@@ -8,6 +8,7 @@ import kehubaobei from '../components/content/kehubaobei.vue'
 import zhikebaobei from '../components/content/zhikebaobei.vue'
 import zhixingbaobei from '../components/content/zhixingbaobei.vue'
 import device from '@/utils/device'
+// import zhikeReportBatchAdd from '@/components/batchOperateComponents/ZhikeReportBatchAdd.vue'
 
 Vue.use(VueRouter)
 
@@ -22,9 +23,14 @@ const router = new VueRouter({
         { path: 'dailibaobei', component: dailibaobei, name: 'dailibaobei' },
         { path: 'kehubaobei', component: kehubaobei, name: 'kehubaobei' },
         { path: 'zhikebaobei', component: zhikebaobei, name: 'zhikebaobei' },
+        { path: 'zhikeReportBatchAdd', component: () => import('@/components/batchOperateComponents/ZhikeReportBatchAdd.vue'), name: 'zhikeReportBatchAdd' },
+        { path: 'yewuReportBatchAdd', component: () => import('@/components/batchOperateComponents/YewuReportBatchAdd.vue'), name: 'yewuReportBatchAdd' },
+        // { path: 'zhikeReportBatchAdd', component: () => import('@/components/batchOperateComponents/ZhikeReportBatchAdd.vue'), name: 'zhikeReportBatchAdd' },
         { path: 'zhixingbaobei', component: zhixingbaobei, name: 'zhixingbaobei' }
       ]
     },
+    // { path: '/zhikeReportBatchAdd', component: zhikeReportBatchAdd, name: 'zhikeReportBatchAdd' },
+    // { path: '/zhikeReportBatchAdd', component: () => import('@/components/batchOperateComponents/ZhikeReportBatchAdd.vue'), name: 'zhikeReportBatchAdd' },
     { path: '/login', component: Login, name: 'login' },
     { path: '/mb',
       component: () => import('@/App.vue'),

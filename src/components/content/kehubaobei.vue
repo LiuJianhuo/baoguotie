@@ -4,7 +4,9 @@
       <input class="input" v-model="searchForm.username" placeholder="请输入要搜索的客户名称">
       <button class="btn-1" @click="handleSearch">搜索</button>
       <button class="btn reset-btn" @click="handleResetSearch">重置</button>
+       <button class="btn common-btn export-btn" @click="handleExport" v-if="$user.getRegion() === 'null'">导出</button>
       <button class="btn-2" @click="handleAddReport">新增业务报备</button>
+      <button class="btn common-btn" style="margin-left: 15px" @click="$router.push({ name: 'yewuReportBatchAdd' })">批量新增业务报备</button>
     </div>
     <div class="center">
       <el-table
@@ -85,7 +87,7 @@
     </div>
     <el-dialog :visible.sync="showReportDialog">
       <div class="kehu-1">
-        <p>客户报备</p>
+        <p>业务报备</p>
         <el-form :model="ruleForm" :rules="rules" ref="ruleForm" class="demo-ruleForm">
           <el-form-item label="客户名称" prop="username">
             <el-input v-model="ruleForm.username" placeholder="请输入客户名称"></el-input>
@@ -148,7 +150,7 @@
 <script>
 import { getRegionList, getProvinceListFromRegionName, getCityListFromProvinceName } from '@/components/uitl/jsAddress.js'
 import { getProvinceMap, getCityMap, getRegionMap } from '@/components/uitl/china-location'
-import { createUserId, getUserList, addReport, updateReport } from '@/api'
+import { createUserId, getUserList, addReport, updateReport, exportReports } from '@/api'
 export default {
   data () {
     var checkPhone = (rule, value, callback) => {
@@ -415,6 +417,7 @@ export default {
             this.getList()
             this.resetRuleForm()
             this.userid = null
+            this.clearReportDialogFields()
           }).catch(err => {
             this.$message({ message: err.message, type: 'error', duration: 900 })
           })
@@ -461,6 +464,12 @@ export default {
       if (this.ruleForm.city) {
         this.areaMap = getRegionMap(this.ruleForm.city)
       }
+    },
+    handleExport () {
+      const form = Object.assign({}, this.searchForm)
+      delete form.row
+      delete form.page
+      exportReports(form)
     }
   }
 }

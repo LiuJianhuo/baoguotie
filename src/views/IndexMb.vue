@@ -335,13 +335,46 @@ export default {
     handleGetContactimgList (id) {
       console.log('id=====')
       console.log(id)
+      let temp = []
       getPicList({
         findex: 'contract',
         bindId: id
       }).then((data) => {
-        this.contractimgList = data && data.map(({ url }) => {
-          return url
-        })
+        // this.contractimgList = data && data.map(({ url }) => {
+        //   return url
+        // })
+        if (data) {
+          temp = [...temp, ...data.map(({ url }) => {
+            return url
+          })]
+          this.contractimgList = temp
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+      getPicList({
+        findex: 'certificater2',
+        bindId: id
+      }).then((data) => {
+        if (data) {
+          temp = [...temp, ...data.map(({ url }) => {
+            return url
+          })]
+          this.contractimgList = temp
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+      getPicList({
+        findex: 'certificater3',
+        bindId: id
+      }).then((data) => {
+        if (data) {
+          temp = [...temp, ...data.map(({ url }) => {
+            return url
+          })]
+          this.contractimgList = temp
+        }
       }).catch(err => {
         console.log(err)
       })

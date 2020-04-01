@@ -14,7 +14,7 @@ export default {
 <style lang="less">
 .el-table {
   &.el-table--border {
-    // border: 1px solid #dad9d9;
+    border: 1px solid #dad9d9;
     border-radius: 6px;
   }
   .el-table__fixed-header-wrapper, .el-table__header-wrapper {
@@ -150,10 +150,11 @@ button {
   text-align: right;
 }
 .common-btn, .reset-btn {
-  width: 80px;
+  // width: 80px;
   height: 53px;
   border: 1px solid #cbcccd;
   border-radius: 10px;
+  padding:0px 20px;
   text-align: center;
   line-height: 51px;
   font-family: PingFangSC-Regular, PingFang SC;
